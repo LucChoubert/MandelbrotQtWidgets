@@ -125,7 +125,7 @@
           <item row="0" column="1">
            <widget class="QLineEdit" name="iterationsLineEdit">
             <property name="text">
-             <string>256</string>
+             <string>500</string>
             </property>
             <property name="clearButtonEnabled">
              <bool>false</bool>
@@ -142,7 +142,7 @@
           <item row="1" column="1">
            <widget class="QLineEdit" name="zoomLineEdit">
             <property name="text">
-             <string>1</string>
+             <string>-1.58496</string>
             </property>
            </widget>
           </item>
