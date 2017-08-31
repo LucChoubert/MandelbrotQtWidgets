@@ -14,7 +14,8 @@ private:
     float y_min;
     float y_max;
     int iter_max;
-    int n_pixel;
+    int height_pixel;
+    int width_pixel;
 };
 
 #endif // MANDELBROTZONECALCULATOR_H

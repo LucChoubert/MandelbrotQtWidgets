@@ -7,17 +7,18 @@ MandelbrotZoneCalculator::MandelbrotZoneCalculator(float ix_min, float ix_max, f
     x_max = ix_max;
     y_min = iy_min;
     y_max = iy_max;
-    n_pixel = in_pixel;
+    height_pixel = in_pixel;
+    width_pixel = in_pixel;
     iter_max = iiter_max;
 }
 
 void MandelbrotZoneCalculator::compute()
 {
-    for(int i=0; i<n_pixel; i++) {
+    for(int i=0; i<width_pixel; i++) {
         //qDebug() << "   Line:" << i;
-        for(int j=0; j<n_pixel; j++) {
-            float c_x = x_min + (x_max-x_min) * i / n_pixel ;
-            float c_y = y_min + (y_max-y_min) * j / n_pixel ;
+        for(int j=0; j<height_pixel; j++) {
+            float c_x = x_min + (x_max-x_min) * i / width_pixel ;
+            float c_y = y_min + (y_max-y_min) * j / height_pixel ;
             float z_x = 0;
             float z_y = 0;
             for(int n=0; n<iter_max; n++) {
