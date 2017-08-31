@@ -24,6 +24,6 @@ void MandelbrotThread::run()
     QElapsedTimer timer;
     timer.start();
     MandelbrotZoneCalculator myMandelbrotZoneCalculator = MandelbrotZoneCalculator(x_min,x_max,y_min,y_max,n_pixel,iter_max);
-    myMandelbrotZoneCalculator.compute();
+    myMandelbrotZoneCalculator.computeZone();
     qDebug() << "Calculation Thread - Completed in (sec):" << float(timer.elapsed())/1000;
 }

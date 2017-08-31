@@ -12,20 +12,33 @@ MandelbrotZoneCalculator::MandelbrotZoneCalculator(float ix_min, float ix_max, f
     iter_max = iiter_max;
 }
 
-void MandelbrotZoneCalculator::compute()
+QPair<bool, int> MandelbrotZoneCalculator::compute(float c_x, float c_y)
+{
+    float z_x = 0;
+    float z_y = 0;
+    float module = 0;
+    int n = 0;
+    while ((module<4) && (n<iter_max)) {
+        float zz_x = z_x * z_x - z_y * z_y + c_x;
+        z_y = 2 * z_x * z_y + c_y;
+        z_x = zz_x;
+        module = z_x*z_x + z_y*z_y;
+        n++;
+    }
+    bool in_M = (module<4);
+    return QPair<bool, int>(in_M,n);
+
+}
+
+void MandelbrotZoneCalculator::computeZone()
 {
     for(int i=0; i<width_pixel; i++) {
         //qDebug() << "   Line:" << i;
         for(int j=0; j<height_pixel; j++) {
             float c_x = x_min + (x_max-x_min) * i / width_pixel ;
             float c_y = y_min + (y_max-y_min) * j / height_pixel ;
-            float z_x = 0;
-            float z_y = 0;
-            for(int n=0; n<iter_max; n++) {
-                float zz_x = z_x * z_x - z_y * z_y + c_x;
-                z_y = 2 * z_x * z_y + c_y;
-                z_x = zz_x;
-            }
+            QPair<bool, int> myBit = compute(c_x,c_y);
+            qDebug() << "Point:(" << c_x << "," << c_y << ") -> " << myBit.first << " " << myBit.second;
         }
     }
 }
