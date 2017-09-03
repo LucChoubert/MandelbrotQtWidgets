@@ -9,6 +9,7 @@ MainWindow::MainWindow(QWidget *parent) :
     ui(new Ui::MainWindow)
 {
     ui->setupUi(this);
+    _mandelbrotThread=NULL;
 }
 
 MainWindow::~MainWindow()
@@ -52,7 +53,52 @@ void MainWindow::on_computeButton_clicked()
         qDebug() << "             X: " << x_min << " " << x_max;
         qDebug() << "             Y: " << y_min << " " << y_max;
         qDebug() << "======================================";
-        MandelbrotThread *myThread = new MandelbrotThread(x_min,x_max,y_min,y_max,600,iter_max);
-        myThread->start();
+
+        if (_mandelbrotThread!=NULL){
+            delete _mandelbrotThread;
+        }
+
+        _mandelbrotThread = new MandelbrotThread(x_min,x_max,y_min,y_max,600,iter_max);
+        QObject::connect(_mandelbrotThread, &MandelbrotThread::zoneComputed, this, &MainWindow::renderMandelbrot);
+        _mandelbrotThread->start();
     }
+}
+
+void MainWindow::renderMandelbrot()
+{
+    qDebug() << "Signal caught - Calculation Thread Completed" ;
+
+    //Draw Mandelbrot Set from newly computed area
+    //QImage myImage;
+    //myImage.load("/home/luc/QtProjects/MandelbrotQtWidgets/images/mandelbrot-1.png");
+    QImage myImage(600, 600, QImage::Format_RGB32);
+    QRgb value = qRgb(189, 149, 39); // 0xffbd9527
+
+    std::vector<std::vector<QPair<bool, int>>> myZone = _mandelbrotThread->getComputedZone();
+
+    for(int i=0; i<600; i++) {
+        for(int j=0; j<600; j++) {
+            if (myZone[i][j].first) {
+                myImage.setPixel(i, j, value);
+            }
+        }
+    }
+
+//    /* initialize random seed: */
+//    srand (time(NULL));
+//    /* generate secret number between 1 and 10: */
+//    for(int i=0;i<10000;i++) {
+//        int x = rand() % 600;
+//        int y = rand() % 600;
+//        myImage.setPixel(x, y, value);
+//    }
+//    value = qRgb(122, 163, 39); // 0xff7aa327
+//    image.setPixel(0, 1, value);
+//    image.setPixel(1, 0, value);
+
+//    value = qRgb(237, 187, 51); // 0xffedba31
+//    image.setPixel(2, 1, value);
+
+    ui->mandelbrotZoneLabel->setPixmap(QPixmap::fromImage(myImage));
+
 }

@@ -3,6 +3,7 @@
 
 #include <QObject>
 #include <QThread>
+#include "mandelbrotzonecalculator.h"
 
 class MandelbrotThread : public QThread
 {
@@ -11,9 +12,13 @@ class MandelbrotThread : public QThread
 public:
     MandelbrotThread(float ix_min, float ix_max, float iy_min, float iy_max, int in_pixel, int iiter_max);
     ~MandelbrotThread();
+    std::vector<std::vector<QPair<bool, int>>> getComputedZone();
 
 protected:
     void run();
+
+signals:
+    void zoneComputed();
 
 private:
     float x_min;
@@ -22,6 +27,7 @@ private:
     float y_max;
     int iter_max;
     int n_pixel;
+    MandelbrotZoneCalculator *_mandelbrotZoneCalculator;
 };
 
 #endif // MANDELBROTTHREAD_H

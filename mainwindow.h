@@ -2,6 +2,7 @@
 #define MAINWINDOW_H
 
 #include <QMainWindow>
+#include <mandelbrotthread.h>
 
 namespace Ui {
 class MainWindow;
@@ -18,9 +19,11 @@ public:
 private slots:
     void on_quitButton_clicked();
     void on_computeButton_clicked();
+    void renderMandelbrot();
 
 private:
     Ui::MainWindow *ui;
+    MandelbrotThread *_mandelbrotThread;
 
 };
 
