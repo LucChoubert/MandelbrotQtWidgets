@@ -26,13 +26,11 @@ DEFINES += QT_DEPRECATED_WARNINGS
 SOURCES += \
         main.cpp \
         mainwindow.cpp \
-    mandelbrotthread.cpp \
-    mandelbrotzonecalculator.cpp
+    mandelbrotzonecalculatorthread.cpp
 
 HEADERS += \
         mainwindow.h \
-    mandelbrotthread.h \
-    mandelbrotzonecalculator.h
+    mandelbrotzonecalculatorthread.h
 
 FORMS += \
         mainwindow.ui
