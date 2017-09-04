@@ -1,6 +1,6 @@
 #include "mainwindow.h"
 #include "ui_mainwindow.h"
-#include "mandelbrotthread.h"
+#include "mandelbrotzonecalculatorthread.h"
 #include <QDebug>
 #include <QMessageBox>
 
@@ -9,7 +9,7 @@ MainWindow::MainWindow(QWidget *parent) :
     ui(new Ui::MainWindow)
 {
     ui->setupUi(this);
-    _mandelbrotThread=NULL;
+    _mandelbrotZoneCalculatorThread=NULL;
 }
 
 MainWindow::~MainWindow()
@@ -54,13 +54,14 @@ void MainWindow::on_computeButton_clicked()
         qDebug() << "             Y: " << y_min << " " << y_max;
         qDebug() << "======================================";
 
-        if (_mandelbrotThread!=NULL){
-            delete _mandelbrotThread;
+        if (_mandelbrotZoneCalculatorThread!=NULL){
+            delete _mandelbrotZoneCalculatorThread;
+            _mandelbrotZoneCalculatorThread=NULL;
         }
 
-        _mandelbrotThread = new MandelbrotThread(x_min,x_max,y_min,y_max,600,iter_max);
-        QObject::connect(_mandelbrotThread, &MandelbrotThread::zoneComputed, this, &MainWindow::renderMandelbrot);
-        _mandelbrotThread->start();
+        _mandelbrotZoneCalculatorThread = new MandelbrotZoneCalculatorThread(x_min,x_max,y_min,y_max,600,600,iter_max);
+        QObject::connect(_mandelbrotZoneCalculatorThread, &MandelbrotZoneCalculatorThread::zoneComputationCompleted, this, &MainWindow::renderMandelbrot);
+        _mandelbrotZoneCalculatorThread->start();
     }
 }
 
@@ -72,14 +73,18 @@ void MainWindow::renderMandelbrot()
     //QImage myImage;
     //myImage.load("/home/luc/QtProjects/MandelbrotQtWidgets/images/mandelbrot-1.png");
     QImage myImage(600, 600, QImage::Format_RGB32);
-    QRgb value = qRgb(189, 149, 39); // 0xffbd9527
+    QRgb valueIN = qRgb(189, 149, 39); // 0xffbd9527
+    QRgb valueOFF = qRgb(0, 0, 0); // 0xffbd9527
 
-    std::vector<std::vector<QPair<bool, int>>> myZone = _mandelbrotThread->getComputedZone();
+    std::vector<std::vector<QPair<bool, int>>> myZone = _mandelbrotZoneCalculatorThread->getComputedZone();
 
     for(int i=0; i<600; i++) {
         for(int j=0; j<600; j++) {
             if (myZone[i][j].first) {
-                myImage.setPixel(i, j, value);
+                myImage.setPixel(i, j, valueIN);
+            }
+            else {
+                myImage.setPixel(i, j, valueOFF);
             }
         }
     }

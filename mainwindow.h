@@ -2,7 +2,7 @@
 #define MAINWINDOW_H
 
 #include <QMainWindow>
-#include <mandelbrotthread.h>
+#include <mandelbrotzonecalculatorthread.h>
 
 namespace Ui {
 class MainWindow;
@@ -23,7 +23,7 @@ private slots:
 
 private:
     Ui::MainWindow *ui;
-    MandelbrotThread *_mandelbrotThread;
+    MandelbrotZoneCalculatorThread *_mandelbrotZoneCalculatorThread;
 
 };
 
