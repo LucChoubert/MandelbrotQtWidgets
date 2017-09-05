@@ -8,8 +8,8 @@ MandelbrotZoneCalculatorThread::MandelbrotZoneCalculatorThread(float ix_min, flo
     x_max = ix_max;
     y_min = iy_min;
     y_max = iy_max;
-    height_pixel = iheight_pixel;
     width_pixel = iwidth_pixel;
+    height_pixel = iheight_pixel;
     iter_max = iiter_max;
     outputZone.resize(width_pixel);
     for(int i = 0; i < width_pixel; i++) {
@@ -24,6 +24,16 @@ MandelbrotZoneCalculatorThread::~MandelbrotZoneCalculatorThread()
 
 std::vector<std::vector<QPair<bool, int>>> MandelbrotZoneCalculatorThread::getComputedZone(){
     return outputZone;
+}
+
+int MandelbrotZoneCalculatorThread::getWidth()
+{
+    return width_pixel;
+}
+
+int MandelbrotZoneCalculatorThread::getHeight()
+{
+    return height_pixel;
 }
 
 void MandelbrotZoneCalculatorThread::run()

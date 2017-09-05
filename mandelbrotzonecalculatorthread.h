@@ -9,9 +9,11 @@ class MandelbrotZoneCalculatorThread : public QThread
     Q_OBJECT
 
 public:
-    MandelbrotZoneCalculatorThread(float ix_min, float ix_max, float iy_min, float iy_max, int iheight_pixel, int iwidth_pixel, int iiter_max);
+    MandelbrotZoneCalculatorThread(float ix_min, float ix_max, float iy_min, float iy_max, int iwidth_pixel, int iheight_pixel, int iiter_max);
     ~MandelbrotZoneCalculatorThread();
     std::vector<std::vector<QPair<bool, int>>> getComputedZone();
+    int getWidth();
+    int getHeight();
     void computeZone();
     QPair<bool, int> compute(float c_x, float c_y);
 
@@ -27,8 +29,8 @@ private:
     float y_min;
     float y_max;
     int iter_max;
-    int height_pixel;
     int width_pixel;
+    int height_pixel;
     std::vector<std::vector<QPair<bool, int>>> outputZone;
 };
 
