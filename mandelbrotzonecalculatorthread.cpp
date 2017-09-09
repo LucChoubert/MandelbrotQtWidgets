@@ -36,6 +36,32 @@ int MandelbrotZoneCalculatorThread::getHeight()
     return height_pixel;
 }
 
+int MandelbrotZoneCalculatorThread::getIter_max()
+{
+    return iter_max;
+}
+
+float MandelbrotZoneCalculatorThread::getX_min()
+{
+    return x_min;
+}
+
+float MandelbrotZoneCalculatorThread::getX_max()
+{
+    return x_max;
+}
+
+float MandelbrotZoneCalculatorThread::getY_min()
+{
+    return y_min;
+}
+
+float MandelbrotZoneCalculatorThread::getY_max()
+{
+    return y_max;
+}
+
+
 void MandelbrotZoneCalculatorThread::run()
 {
     qDebug() << "Calculation Thread :" << x_min << "," << x_max << "," << y_min << "," << y_max << "," << width_pixel<< "," << height_pixel << "," << iter_max<< " - Starting...";

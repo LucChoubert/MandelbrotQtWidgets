@@ -6,15 +6,26 @@
 
 MainWindow::MainWindow(QWidget *parent) :
     QMainWindow(parent),
+    _mandelbrotZoneCalculatorThread(NULL),
     ui(new Ui::MainWindow)
 {
     ui->setupUi(this);
-    _mandelbrotZoneCalculatorThread=NULL;
 }
 
 MainWindow::~MainWindow()
 {
     delete ui;
+}
+
+void MainWindow::resizeEvent(QResizeEvent *event)
+{
+
+}
+
+void MainWindow::paintEvent(QPaintEvent *event)
+{
+    qDebug("Paint Event received");
+    computeMandelbrot();
 }
 
 void MainWindow::on_quitButton_clicked()
@@ -26,11 +37,17 @@ void MainWindow::on_quitButton_clicked()
 void MainWindow::on_computeButton_clicked()
 {
     qDebug("Compute Button pushed");
+    computeMandelbrot();
+}
+
+void MainWindow::computeMandelbrot()
+{
     bool ok1, ok2, ok3, ok4;
     int iter_max = ui->iterationsLineEdit->text().toInt(&ok1);
     float zoom = ui->zoomLineEdit->text().toFloat(&ok2);
     float x0 = ui->x0LineEdit->text().toFloat(&ok3);
     float y0 = ui->y0LineEdit->text().toFloat(&ok4);
+
     if (!ok1 || !ok2 || !ok3 || !ok4)
     {
         QMessageBox messageBox;
@@ -56,7 +73,19 @@ void MainWindow::on_computeButton_clicked()
         qDebug() << "test" << ui->mandelbrotZoneLabel->size();
         qDebug() << "======================================";
 
-        if (_mandelbrotZoneCalculatorThread!=NULL){
+        if ((_mandelbrotZoneCalculatorThread!=NULL) &&
+                ((iter_max==_mandelbrotZoneCalculatorThread->getIter_max()) &&
+                 (x_min==_mandelbrotZoneCalculatorThread->getX_min()) &&
+                 (x_max==_mandelbrotZoneCalculatorThread->getX_max()) &&
+                 (y_min==_mandelbrotZoneCalculatorThread->getY_min()) &&
+                 (y_max==_mandelbrotZoneCalculatorThread->getY_max()) &&
+                 (ui->mandelbrotZoneLabel->size().width()==_mandelbrotZoneCalculatorThread->getWidth()) &&
+                 (ui->mandelbrotZoneLabel->size().height()==_mandelbrotZoneCalculatorThread->getHeight()) )) {
+            qDebug() << "SKIPPED CALCULATION";
+            return;
+        }
+
+        if (_mandelbrotZoneCalculatorThread!=NULL && _mandelbrotZoneCalculatorThread->isFinished()){
             delete _mandelbrotZoneCalculatorThread;
             _mandelbrotZoneCalculatorThread=NULL;
         }
@@ -83,10 +112,28 @@ void MainWindow::renderMandelbrot()
     for(int i=0; i<_mandelbrotZoneCalculatorThread->getWidth(); i++) {
         for(int j=0; j<_mandelbrotZoneCalculatorThread->getHeight(); j++) {
             if (myZone[i][j].first) {
-                myImage.setPixel(i, j, valueIN);
+                myImage.setPixel(i, j, valueOFF);
             }
             else {
-                myImage.setPixel(i, j, valueOFF);
+                float zoom = ui->zoomLineEdit->text().toFloat();
+                float x0 = ui->x0LineEdit->text().toFloat();
+                float y0 = ui->y0LineEdit->text().toFloat();
+                float half_range = pow(2.0,(-zoom-1));
+                float x_min = x0 - half_range;
+                float x_max = x0 + half_range;
+                float y_min = y0 - half_range;
+                float y_max = y0 + half_range;
+                float x = x_min + i * (x_max - x_min)/_mandelbrotZoneCalculatorThread->getWidth();
+                float y = y_min + j * (y_max - y_min)/_mandelbrotZoneCalculatorThread->getHeight();
+                float zn = sqrt( x * x + y * y );
+                float hue = myZone[i][j].second + 1.0 - log(1+abs(log(zn))) / log(2);
+                hue = 0.95 + 80.0 * hue;
+                //qDebug() << "Hue:" << x << y << zn << myZone[i][j].second << log(1+abs(log(zn))) << hue ;
+                hue=(int)hue%360;
+                QColor color;
+                color.setHsv(hue,200,200);
+                myImage.setPixelColor(i, j, color);
+//                myImage.setPixel(i, j, valueIN);
             }
         }
     }
