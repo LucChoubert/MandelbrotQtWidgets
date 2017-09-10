@@ -4,6 +4,20 @@
 #include <QObject>
 #include <QThread>
 
+struct MandelbrotPoint {
+    // Coordinate of the point
+    float x;
+    float y;
+    // Iter reach in Mandelbrot suite
+    int n;
+    // Coordinate of the nth iteration point
+    float xn;
+    float yn;
+    // Boolean value to indicate if point is in or out the MAndelbrot Set
+    bool isInM;
+};
+typedef struct MandelbrotPoint MandelbrotPoint;
+
 class MandelbrotZoneCalculatorThread : public QThread
 {
     Q_OBJECT
@@ -12,10 +26,17 @@ public:
     MandelbrotZoneCalculatorThread(float ix_min, float ix_max, float iy_min, float iy_max, int iwidth_pixel, int iheight_pixel, int iiter_max);
     ~MandelbrotZoneCalculatorThread();
     std::vector<std::vector<QPair<bool, int>>> getComputedZone();
+    std::vector<std::vector<MandelbrotPoint>> getComputedZone2();
     int getWidth();
     int getHeight();
+    int getIter_max();
+    float getX_min();
+    float getX_max();
+    float getY_min();
+    float getY_max();
     void computeZone();
-    QPair<bool, int> compute(float c_x, float c_y);
+    //QPair<bool, int> compute(float c_x, float c_y);
+    MandelbrotPoint compute(float c_x, float c_y);
 
 protected:
     void run();
@@ -32,6 +53,7 @@ private:
     int width_pixel;
     int height_pixel;
     std::vector<std::vector<QPair<bool, int>>> outputZone;
+    std::vector<std::vector<MandelbrotPoint>> outputZone2;
 };
 
 #endif // MANDELBROTZONECALCULATORTHREAD_H
