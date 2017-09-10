@@ -2,6 +2,7 @@
 #define MAINWINDOW_H
 
 #include <QMainWindow>
+#include <QElapsedTimer>
 #include <mandelbrotzonecalculatorthread.h>
 
 namespace Ui {
@@ -28,6 +29,7 @@ private slots:
 
 private:
     bool threadRunning;
+    QElapsedTimer timer;
     MandelbrotZoneCalculatorThread *_mandelbrotZoneCalculatorThread;
     Ui::MainWindow *ui;
 

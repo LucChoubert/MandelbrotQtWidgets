@@ -3,10 +3,13 @@
 #include "mandelbrotzonecalculatorthread.h"
 #include <QDebug>
 #include <QMessageBox>
+#include <QStatusBar>
+#include <QPlainTextEdit>
 
 MainWindow::MainWindow(QWidget *parent) :
     QMainWindow(parent),
     threadRunning(false),
+    timer(),
     _mandelbrotZoneCalculatorThread(NULL),
     ui(new Ui::MainWindow)
 {
@@ -25,19 +28,20 @@ void MainWindow::resizeEvent(QResizeEvent *event)
 
 void MainWindow::paintEvent(QPaintEvent *event)
 {
-    qDebug("Paint Event received");
+    //qDebug() << QThread::currentThread() <<  "- Paint Event received";
     computeMandelbrot();
+    //qDebug() << QThread::currentThread() << "- Paint Event Completed";
 }
 
 void MainWindow::on_quitButton_clicked()
 {
-    qDebug("Exit Button pushed");
+    //qDebug("Exit Button pushed");
     QApplication::exit();
 }
 
 void MainWindow::on_computeButton_clicked()
 {
-    qDebug("Compute Button pushed");
+    //qDebug("Compute Button pushed");
     computeMandelbrot();
 }
 
@@ -58,12 +62,37 @@ void MainWindow::computeMandelbrot()
         messageBox.exec();
     }
     else {
+
         float half_range = pow(2.0,(-zoom-1));
         float x_min = x0 - half_range;
         float x_max = x0 + half_range;
         float y_min = y0 - half_range;
         float y_max = y0 + half_range;
         QSize mySize = ui->mandelbrotZoneLabel->size();
+
+        if ((_mandelbrotZoneCalculatorThread!=NULL) &&
+                ((iter_max==_mandelbrotZoneCalculatorThread->getIter_max()) &&
+                 (x_min==_mandelbrotZoneCalculatorThread->getX_min()) &&
+                 (x_max==_mandelbrotZoneCalculatorThread->getX_max()) &&
+                 (y_min==_mandelbrotZoneCalculatorThread->getY_min()) &&
+                 (y_max==_mandelbrotZoneCalculatorThread->getY_max()) &&
+                 (mySize.width()==_mandelbrotZoneCalculatorThread->getWidth()) &&
+                 (mySize.height()==_mandelbrotZoneCalculatorThread->getHeight()) )) {
+            //qDebug() << "SKIPPED CALCULATION - Same Area";
+            return;
+        }
+
+        if (threadRunning) {
+            //qDebug() << "SKIPPED CALCULATION - Thread already runing";
+            return;
+        }
+        else {
+            threadRunning = true;
+        }
+
+
+        //Status bar management
+        ui->statusBar->showMessage(tr("Calculation Running"));
 
         qDebug() << "======== Mandelbrot Set Area: ========";
         qDebug() << " Max Iteration: " << iter_max;
@@ -76,22 +105,8 @@ void MainWindow::computeMandelbrot()
         qDebug() << "Mandelbrot Widget Size" << mySize;
         qDebug() << "======================================";
 
-        if ((_mandelbrotZoneCalculatorThread!=NULL) &&
-                ((iter_max==_mandelbrotZoneCalculatorThread->getIter_max()) &&
-                 (x_min==_mandelbrotZoneCalculatorThread->getX_min()) &&
-                 (x_max==_mandelbrotZoneCalculatorThread->getX_max()) &&
-                 (y_min==_mandelbrotZoneCalculatorThread->getY_min()) &&
-                 (y_max==_mandelbrotZoneCalculatorThread->getY_max()) &&
-                 (mySize.width()==_mandelbrotZoneCalculatorThread->getWidth()) &&
-                 (mySize.height()==_mandelbrotZoneCalculatorThread->getHeight()) )) {
-            qDebug() << "SKIPPED CALCULATION - Same Area";
-            return;
-        }
-
-        if (threadRunning) {
-            qDebug() << "SKIPPED CALCULATION - Thread already runing";
-            return;
-        }
+        //Start measuring calculation time
+        timer.start();
 
         // New calculation needed, let's destroy and create a new thread
         if (_mandelbrotZoneCalculatorThread!=NULL && _mandelbrotZoneCalculatorThread->isFinished()){
@@ -100,7 +115,6 @@ void MainWindow::computeMandelbrot()
         }
 
         // Start the thread
-        threadRunning = true;
         _mandelbrotZoneCalculatorThread = new MandelbrotZoneCalculatorThread(x_min,x_max,y_min,y_max,mySize.width(),mySize.height(),iter_max);
         QObject::connect(_mandelbrotZoneCalculatorThread, &MandelbrotZoneCalculatorThread::zoneComputationCompleted, this, &MainWindow::renderMandelbrot);
         _mandelbrotZoneCalculatorThread->start();
@@ -109,7 +123,14 @@ void MainWindow::computeMandelbrot()
 
 void MainWindow::renderMandelbrot()
 {
-    qDebug() << "Signal caught - Calculation Thread Completed for widget size " << _mandelbrotZoneCalculatorThread->getWidth() << _mandelbrotZoneCalculatorThread->getHeight()  ;
+    QString loggingText, stringTimer;
+    qDebug() << "Signal received - Calculation Thread Completed for widget size " << _mandelbrotZoneCalculatorThread->getWidth() << _mandelbrotZoneCalculatorThread->getHeight()  ;
+    qDebug() << "User perception - Calculation completed in (sec):" << float(timer.elapsed())/1000;
+    stringTimer.setNum(float(timer.elapsed())/1000);
+    loggingText = QString("Calculated:") + stringTimer + QString("s");
+
+    //Start measuring rendering time
+    timer.start();
 
     //Draw Mandelbrot Set from newly computed area
     //QImage myImage;
@@ -152,4 +173,18 @@ void MainWindow::renderMandelbrot()
 
     ui->mandelbrotZoneLabel->setPixmap(QPixmap::fromImage(myImage));
     threadRunning = false;
+
+    //
+    qDebug() << "User perception - Rendering completed in (sec):" << float(timer.elapsed())/1000;
+    stringTimer.setNum(float(timer.elapsed())/1000);
+    loggingText = loggingText + QString(" - Rendered:") + stringTimer + QString("s");
+
+    //Status bar management
+    ui->statusBar->showMessage(loggingText);
+
+    //Logging area management TODO
+    //QTextDocument *myDocument = new QTextDocument(loggingText);
+    //ui->logTextArea->setDocument(myDocument);
+    //ui->logTextArea->setPlainText(loggingText);
+
 }
