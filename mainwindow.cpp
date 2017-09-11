@@ -9,11 +9,14 @@
 MainWindow::MainWindow(QWidget *parent) :
     QMainWindow(parent),
     threadRunning(false),
+    statusMessage(QString("Welcome into Mandelbrot set beauty")),
     timer(),
     _mandelbrotZoneCalculatorThread(NULL),
     ui(new Ui::MainWindow)
 {
     ui->setupUi(this);
+    ui->mandelbrotZoneLabel->setMouseTracking(true);
+    ui->statusBar->addPermanentWidget(&statusMessage);
 }
 
 MainWindow::~MainWindow()
@@ -92,7 +95,8 @@ void MainWindow::computeMandelbrot()
 
 
         //Status bar management
-        ui->statusBar->showMessage(tr("Calculation Running"));
+        //ui->statusBar->showMessage(tr("Calculation Running"));
+        statusMessage.setText(QString("Calculation Running"));
 
         qDebug() << "======== Mandelbrot Set Area: ========";
         qDebug() << " Max Iteration: " << iter_max;
@@ -180,11 +184,6 @@ void MainWindow::renderMandelbrot()
     loggingText = loggingText + QString(" - Rendered:") + stringTimer + QString("s");
 
     //Status bar management
-    ui->statusBar->showMessage(loggingText);
-
-    //Logging area management TODO
-    //QTextDocument *myDocument = new QTextDocument(loggingText);
-    //ui->logTextArea->setDocument(myDocument);
-    //ui->logTextArea->setPlainText(loggingText);
-
+    //ui->statusBar->showMessage(loggingText);
+    statusMessage.setText(loggingText);
 }

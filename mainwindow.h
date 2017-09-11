@@ -2,6 +2,7 @@
 #define MAINWINDOW_H
 
 #include <QMainWindow>
+#include <QLabel>
 #include <QElapsedTimer>
 #include <mandelbrotzonecalculatorthread.h>
 
@@ -29,6 +30,7 @@ private slots:
 
 private:
     bool threadRunning;
+    QLabel statusMessage;
     QElapsedTimer timer;
     MandelbrotZoneCalculatorThread *_mandelbrotZoneCalculatorThread;
     Ui::MainWindow *ui;
