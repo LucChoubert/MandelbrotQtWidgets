@@ -21,12 +21,15 @@ public:
 protected:
     void resizeEvent(QResizeEvent *event) override;
     void paintEvent(QPaintEvent *event) override;
+    void computeMandelbrot();
 
 private slots:
     void on_quitButton_clicked();
     void on_computeButton_clicked();
-    void computeMandelbrot();
     void renderMandelbrot();
+    void updateMandelbrotZoneCursorPosition(QPointF position);
+    void updateMandelbrotZoneCenter(QPointF position);
+    void updateMandelbrotZoneZoomAndCenter(QPointF position, int zoomFactor);
 
 private:
     bool threadRunning;

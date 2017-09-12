@@ -16,6 +16,9 @@ MainWindow::MainWindow(QWidget *parent) :
 {
     ui->setupUi(this);
     ui->statusBar->addPermanentWidget(&statusMessage);
+    QObject::connect(ui->mandelbrotZoneLabel, &MandelbrotLabel::mouseMoveHappened, this, &MainWindow::updateMandelbrotZoneCursorPosition);
+    QObject::connect(ui->mandelbrotZoneLabel, &MandelbrotLabel::mouseClickHappened, this, &MainWindow::updateMandelbrotZoneCenter);
+    QObject::connect(ui->mandelbrotZoneLabel, &MandelbrotLabel::mouseWheelHappened, this, &MainWindow::updateMandelbrotZoneZoomAndCenter);
 }
 
 MainWindow::~MainWindow()
@@ -37,14 +40,47 @@ void MainWindow::paintEvent(QPaintEvent *event)
 
 void MainWindow::on_quitButton_clicked()
 {
-    //qDebug("Exit Button pushed");
+    //qDebug() << "Exit Button pushed";
     QApplication::exit();
 }
 
 void MainWindow::on_computeButton_clicked()
 {
-    //qDebug("Compute Button pushed");
+    //qDebug() << "Compute Button pushed";
     computeMandelbrot();
+}
+
+void MainWindow::updateMandelbrotZoneCursorPosition(QPointF position)
+{
+    //qDebug() << "updateMandelbrotZoneCursorPosition:" << position;
+    QString stringX, stringY;
+    stringX.setNum(position.x());
+    stringY.setNum(position.y());
+    ui->statusBar->showMessage(QString("Cursor:(") + stringX + QString(",") + stringY + QString(")"),2500);
+
+}
+
+void MainWindow::updateMandelbrotZoneCenter(QPointF position)
+{
+    //qDebug() << "updateMandelbrotZoneCenter:" << position;
+    QString stringX, stringY;
+    stringX.setNum(position.x());
+    stringY.setNum(position.y());
+    ui->x0LineEdit->setText(stringX);
+    ui->y0LineEdit->setText(stringY);
+}
+
+void MainWindow::updateMandelbrotZoneZoomAndCenter(QPointF position, int zoomFactor)
+{
+    qDebug() << "updateMandelbrotZoneZoomAndCenter:" << position << zoomFactor;
+    QString stringX, stringY, stringZoom;
+    stringX.setNum(position.x());
+    stringY.setNum(position.y());
+    float zoom = ui->zoomLineEdit->text().toFloat();
+    stringZoom.setNum(zoom+zoomFactor*0.5);
+    ui->x0LineEdit->setText(stringX);
+    ui->y0LineEdit->setText(stringY);
+    ui->zoomLineEdit->setText(stringZoom);
 }
 
 void MainWindow::computeMandelbrot()
@@ -174,6 +210,7 @@ void MainWindow::renderMandelbrot()
         }
     }
 
+    ui->mandelbrotZoneLabel->setZone(_mandelbrotZoneCalculatorThread->getX_min(),_mandelbrotZoneCalculatorThread->getX_max(),_mandelbrotZoneCalculatorThread->getY_min(),_mandelbrotZoneCalculatorThread->getY_max(),_mandelbrotZoneCalculatorThread->getWidth(),_mandelbrotZoneCalculatorThread->getHeight());
     ui->mandelbrotZoneLabel->setPixmap(QPixmap::fromImage(myImage));
     threadRunning = false;
 
