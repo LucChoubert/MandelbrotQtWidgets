@@ -17,7 +17,17 @@ void MandelbrotLabel::setZone(float ix_min, float ix_max, float iy_min, float iy
     height_pixel = iheight_pixel;
 }
 
-QPointF MandelbrotLabel::convertScreenPositionToRealPosition(QPoint iPosition)
+void MandelbrotLabel::setIter_max(int iiter_max)
+{
+    iter_max = iiter_max;
+}
+
+bool MandelbrotLabel::isSameZone(float ix_min, float ix_max, float iy_min, float iy_max, int iwidth_pixel, int iheight_pixel, int iiter_max)
+{
+    return (ix_min==x_min && ix_max==x_max && iy_min==y_min && iy_max==y_max && iwidth_pixel==width_pixel && iheight_pixel==height_pixel && iiter_max==iter_max);
+}
+
+    QPointF MandelbrotLabel::convertScreenPositionToRealPosition(QPoint iPosition)
 {
     float x = x_min + iPosition.x()*(x_max - x_min)/width_pixel;
     float y = y_min + iPosition.y()*(y_max - y_min)/height_pixel;

@@ -10,6 +10,8 @@ class MandelbrotLabel : public QLabel
 public:
     explicit MandelbrotLabel(QWidget *parent = nullptr);
     void setZone(float ix_min, float ix_max, float iy_min, float iy_max, int iwidth_pixel, int iheight_pixel);
+    void setIter_max(int iiter_max);
+    bool isSameZone(float ix_min, float ix_max, float iy_min, float iy_max, int iwidth_pixel, int iheight_pixel, int iiter_max);
 
 protected:
     void mouseMoveEvent(QMouseEvent *event) override;
@@ -31,6 +33,8 @@ private:
     float y_max;
     int width_pixel;
     int height_pixel;
+    //temporary until iter_max is fully dynamic
+    int iter_max;
 };
 
 #endif // MANDELBROTLABEL_H
