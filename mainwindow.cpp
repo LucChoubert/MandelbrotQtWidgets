@@ -156,6 +156,7 @@ void MainWindow::computeMandelbrot()
         }
         else {
         //MultiThread activated
+
         }
     }
 }
