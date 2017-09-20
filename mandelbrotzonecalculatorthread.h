@@ -23,8 +23,10 @@ class MandelbrotZoneCalculatorThread : public QThread
     Q_OBJECT
 
 public:
+    MandelbrotZoneCalculatorThread();
     MandelbrotZoneCalculatorThread(float ix_min, float ix_max, float iy_min, float iy_max, int iwidth_pixel, int iheight_pixel, int iiter_max);
     ~MandelbrotZoneCalculatorThread();
+    void setCalculationDetails(float ix_min, float ix_max, float iy_min, float iy_max, int iwidth_pixel, int iheight_pixel, int iiter_max);
     std::vector<std::vector<QPair<bool, int>>> getComputedZone();
     std::vector<std::vector<MandelbrotPoint>> getComputedZone2();
     int getWidth();
@@ -35,7 +37,8 @@ public:
     float getY_min();
     float getY_max();
     void computeZone();
-    //QPair<bool, int> compute(float c_x, float c_y);
+
+private:
     MandelbrotPoint compute(float c_x, float c_y);
 
 protected:

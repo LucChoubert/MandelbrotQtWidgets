@@ -2,7 +2,30 @@
 #include <QDebug>
 #include <QElapsedTimer>
 
+MandelbrotZoneCalculatorThread::MandelbrotZoneCalculatorThread()
+{
+    setCalculationDetails(0,0,0,0,0,0,0);
+}
+
 MandelbrotZoneCalculatorThread::MandelbrotZoneCalculatorThread(float ix_min, float ix_max, float iy_min, float iy_max, int iwidth_pixel, int iheight_pixel, int iiter_max)
+{
+    setCalculationDetails(ix_min, ix_max, iy_min, iy_max, iwidth_pixel, iheight_pixel, iiter_max);
+//    x_min = ix_min;
+//    x_max = ix_max;
+//    y_min = iy_min;
+//    y_max = iy_max;
+//    width_pixel = iwidth_pixel;
+//    height_pixel = iheight_pixel;
+//    iter_max = iiter_max;
+//    outputZone.resize(width_pixel);
+//    outputZone2.resize(width_pixel);
+//    for(int i = 0; i < width_pixel; i++) {
+//        outputZone[i].resize(height_pixel);
+//        outputZone2[i].resize(height_pixel);
+//    }
+}
+
+void MandelbrotZoneCalculatorThread::setCalculationDetails(float ix_min, float ix_max, float iy_min, float iy_max, int iwidth_pixel, int iheight_pixel, int iiter_max)
 {
     x_min = ix_min;
     x_max = ix_max;

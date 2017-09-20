@@ -141,6 +141,11 @@ void MainWindow::computeMandelbrot()
         timer.start();
 
         if (!activeMultithread) {
+            //MultiThread NOT activated
+            if (_listMandelbrotZoneCalculatorThread.empty()) {
+                MandelbrotZoneCalculatorThread mandelbrotZoneCalculatorThread;
+                //_listMandelbrotZoneCalculatorThread.push_back(mandelbrotZoneCalculatorThread);
+            }
 
             // New calculation needed, let's destroy and create a new thread
             //if (_mandelbrotZoneCalculatorThread!=NULL && _mandelbrotZoneCalculatorThread->isFinished()){
