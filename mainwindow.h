@@ -27,17 +27,19 @@ protected:
 private slots:
     void on_quitButton_clicked();
     void on_computeButton_clicked();
-    void renderMandelbrot();
+    void renderMandelbrot(MandelbrotZoneCalculatorThread * iThread);
     void updateMandelbrotZoneCursorPosition(QPointF position);
     void updateMandelbrotZoneCenter(QPointF position);
     void updateMandelbrotZoneZoomAndCenter(QPointF position, int zoomFactor);
 
 private:
     bool threadRunning;
+    int nbThreadRunning;
     QLabel statusMessage;
     QElapsedTimer timer;
+    qint64 renderingTime;
     MandelbrotZoneCalculatorThread *_mandelbrotZoneCalculatorThread;
-    QList<MandelbrotZoneCalculatorThread> _listMandelbrotZoneCalculatorThread;
+    QList<MandelbrotZoneCalculatorThread *> _listMandelbrotZoneCalculatorThread;
     Ui::MainWindow *ui;
 
 };

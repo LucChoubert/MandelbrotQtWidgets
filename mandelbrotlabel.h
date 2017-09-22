@@ -12,6 +12,7 @@ public:
     void setZone(float ix_min, float ix_max, float iy_min, float iy_max, int iwidth_pixel, int iheight_pixel);
     void setIter_max(int iiter_max);
     bool isSameZone(float ix_min, float ix_max, float iy_min, float iy_max, int iwidth_pixel, int iheight_pixel, int iiter_max);
+    bool isSameSize(int iwidth_pixel, int iheight_pixel);
 
 protected:
     void mouseMoveEvent(QMouseEvent *event) override;

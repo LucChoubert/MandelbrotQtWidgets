@@ -24,13 +24,14 @@ class MandelbrotZoneCalculatorThread : public QThread
 
 public:
     MandelbrotZoneCalculatorThread();
-    MandelbrotZoneCalculatorThread(float ix_min, float ix_max, float iy_min, float iy_max, int iwidth_pixel, int iheight_pixel, int iiter_max);
+    MandelbrotZoneCalculatorThread(float ix_min, float ix_max, float iy_min, float iy_max, int iwidth_pixel, int iheight_pixel, int iiter_max, int ioffset_pixel=0);
     ~MandelbrotZoneCalculatorThread();
-    void setCalculationDetails(float ix_min, float ix_max, float iy_min, float iy_max, int iwidth_pixel, int iheight_pixel, int iiter_max);
+    void setCalculationDetails(float ix_min, float ix_max, float iy_min, float iy_max, int iwidth_pixel, int iheight_pixel, int iiter_max, int ioffset_pixel=0);
     std::vector<std::vector<QPair<bool, int>>> getComputedZone();
     std::vector<std::vector<MandelbrotPoint>> getComputedZone2();
     int getWidth();
     int getHeight();
+    int getOffset();
     int getIter_max();
     float getX_min();
     float getX_max();
@@ -45,7 +46,7 @@ protected:
     void run();
 
 signals:
-    void zoneComputationCompleted();
+    void zoneComputationCompleted(MandelbrotZoneCalculatorThread * iThread);
 
 private:
     float x_min;
@@ -55,6 +56,7 @@ private:
     int iter_max;
     int width_pixel;
     int height_pixel;
+    int offset_pixel;
     std::vector<std::vector<QPair<bool, int>>> outputZone;
     std::vector<std::vector<MandelbrotPoint>> outputZone2;
 };

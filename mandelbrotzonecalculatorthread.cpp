@@ -7,9 +7,9 @@ MandelbrotZoneCalculatorThread::MandelbrotZoneCalculatorThread()
     setCalculationDetails(0,0,0,0,0,0,0);
 }
 
-MandelbrotZoneCalculatorThread::MandelbrotZoneCalculatorThread(float ix_min, float ix_max, float iy_min, float iy_max, int iwidth_pixel, int iheight_pixel, int iiter_max)
+MandelbrotZoneCalculatorThread::MandelbrotZoneCalculatorThread(float ix_min, float ix_max, float iy_min, float iy_max, int iwidth_pixel, int iheight_pixel, int iiter_max, int ioffset_pixel)
 {
-    setCalculationDetails(ix_min, ix_max, iy_min, iy_max, iwidth_pixel, iheight_pixel, iiter_max);
+    setCalculationDetails(ix_min, ix_max, iy_min, iy_max, iwidth_pixel, iheight_pixel, iiter_max, ioffset_pixel);
 //    x_min = ix_min;
 //    x_max = ix_max;
 //    y_min = iy_min;
@@ -25,7 +25,7 @@ MandelbrotZoneCalculatorThread::MandelbrotZoneCalculatorThread(float ix_min, flo
 //    }
 }
 
-void MandelbrotZoneCalculatorThread::setCalculationDetails(float ix_min, float ix_max, float iy_min, float iy_max, int iwidth_pixel, int iheight_pixel, int iiter_max)
+void MandelbrotZoneCalculatorThread::setCalculationDetails(float ix_min, float ix_max, float iy_min, float iy_max, int iwidth_pixel, int iheight_pixel, int iiter_max, int ioffset_pixel)
 {
     x_min = ix_min;
     x_max = ix_max;
@@ -33,6 +33,7 @@ void MandelbrotZoneCalculatorThread::setCalculationDetails(float ix_min, float i
     y_max = iy_max;
     width_pixel = iwidth_pixel;
     height_pixel = iheight_pixel;
+    offset_pixel = ioffset_pixel;
     iter_max = iiter_max;
     outputZone.resize(width_pixel);
     outputZone2.resize(width_pixel);
@@ -44,7 +45,7 @@ void MandelbrotZoneCalculatorThread::setCalculationDetails(float ix_min, float i
 
 MandelbrotZoneCalculatorThread::~MandelbrotZoneCalculatorThread()
 {
-    qDebug() << "Calculation Thread :" << x_min << "," << x_max << "," << y_min << "," << y_max << "," << width_pixel << "," << height_pixel << "," << iter_max<< " - ...Destroyed";
+    qDebug() << "Calculation Thread :" << x_min << "," << x_max << "," << y_min << "," << y_max << "," << width_pixel << "," << height_pixel << "," << iter_max << "," << offset_pixel << " - ...Destroyed";
 }
 
 std::vector<std::vector<QPair<bool, int>>> MandelbrotZoneCalculatorThread::getComputedZone(){
@@ -53,6 +54,11 @@ std::vector<std::vector<QPair<bool, int>>> MandelbrotZoneCalculatorThread::getCo
 
 std::vector<std::vector<MandelbrotPoint>> MandelbrotZoneCalculatorThread::getComputedZone2(){
     return outputZone2;
+}
+
+int MandelbrotZoneCalculatorThread::getOffset()
+{
+    return offset_pixel;
 }
 
 int MandelbrotZoneCalculatorThread::getWidth()
@@ -93,7 +99,7 @@ float MandelbrotZoneCalculatorThread::getY_max()
 
 void MandelbrotZoneCalculatorThread::run()
 {
-    qDebug() << "Calculation Thread :" << x_min << "," << x_max << "," << y_min << "," << y_max << "," << width_pixel<< "," << height_pixel << "," << iter_max<< " - Starting...";
+    qDebug() << "Calculation Thread :" << x_min << "," << x_max << "," << y_min << "," << y_max << "," << width_pixel<< "," << height_pixel << "," << iter_max << "," << offset_pixel << " - Starting...";
     QElapsedTimer timer;
     timer.start();
 
@@ -102,7 +108,7 @@ void MandelbrotZoneCalculatorThread::run()
     qDebug() << "Calculation Thread - Completed in (sec):" << float(timer.elapsed())/1000;
 
     // Calculation completed, send signal to main UI for rendering
-    emit zoneComputationCompleted();
+    emit zoneComputationCompleted(this);
 }
 
 //QPair<bool, int> MandelbrotZoneCalculatorThread::compute(float c_x, float c_y)
