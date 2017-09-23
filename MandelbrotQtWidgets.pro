@@ -32,7 +32,8 @@ SOURCES += \
 HEADERS += \
         mainwindow.h \
     mandelbrotzonecalculatorthread.h \
-    mandelbrotlabel.h
+    mandelbrotlabel.h \
+    basictypes.h
 
 FORMS += \
         mainwindow.ui
