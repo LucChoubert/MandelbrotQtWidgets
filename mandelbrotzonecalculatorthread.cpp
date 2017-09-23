@@ -7,25 +7,12 @@ MandelbrotZoneCalculatorThread::MandelbrotZoneCalculatorThread()
     setCalculationDetails(0,0,0,0,0,0,0);
 }
 
-MandelbrotZoneCalculatorThread::MandelbrotZoneCalculatorThread(float ix_min, float ix_max, float iy_min, float iy_max, int iwidth_pixel, int iheight_pixel, int iiter_max, int ioffset_pixel)
+MandelbrotZoneCalculatorThread::MandelbrotZoneCalculatorThread(long double ix_min, long double ix_max, long double iy_min, long double iy_max, int iwidth_pixel, int iheight_pixel, int iiter_max, int ioffset_pixel)
 {
     setCalculationDetails(ix_min, ix_max, iy_min, iy_max, iwidth_pixel, iheight_pixel, iiter_max, ioffset_pixel);
-//    x_min = ix_min;
-//    x_max = ix_max;
-//    y_min = iy_min;
-//    y_max = iy_max;
-//    width_pixel = iwidth_pixel;
-//    height_pixel = iheight_pixel;
-//    iter_max = iiter_max;
-//    outputZone.resize(width_pixel);
-//    outputZone2.resize(width_pixel);
-//    for(int i = 0; i < width_pixel; i++) {
-//        outputZone[i].resize(height_pixel);
-//        outputZone2[i].resize(height_pixel);
-//    }
 }
 
-void MandelbrotZoneCalculatorThread::setCalculationDetails(float ix_min, float ix_max, float iy_min, float iy_max, int iwidth_pixel, int iheight_pixel, int iiter_max, int ioffset_pixel)
+void MandelbrotZoneCalculatorThread::setCalculationDetails(long double ix_min, long double ix_max, long double iy_min, long double iy_max, int iwidth_pixel, int iheight_pixel, int iiter_max, int ioffset_pixel)
 {
     x_min = ix_min;
     x_max = ix_max;
@@ -36,24 +23,18 @@ void MandelbrotZoneCalculatorThread::setCalculationDetails(float ix_min, float i
     offset_pixel = ioffset_pixel;
     iter_max = iiter_max;
     outputZone.resize(width_pixel);
-    outputZone2.resize(width_pixel);
     for(int i = 0; i < width_pixel; i++) {
         outputZone[i].resize(height_pixel);
-        outputZone2[i].resize(height_pixel);
     }
 }
 
 MandelbrotZoneCalculatorThread::~MandelbrotZoneCalculatorThread()
 {
-    qDebug() << "Calculation Thread :" << x_min << "," << x_max << "," << y_min << "," << y_max << "," << width_pixel << "," << height_pixel << "," << iter_max << "," << offset_pixel << " - ...Destroyed";
+    qDebug() << "Calculation Thread :" << (double)x_min << "," << (double)x_max << "," << (double)y_min << "," << (double)y_max << "," << width_pixel << "," << height_pixel << "," << iter_max << "," << offset_pixel << " - ...Destroyed";
 }
 
-std::vector<std::vector<QPair<bool, int>>> MandelbrotZoneCalculatorThread::getComputedZone(){
+std::vector<std::vector<MandelbrotSetPoint>> MandelbrotZoneCalculatorThread::getComputedZone(){
     return outputZone;
-}
-
-std::vector<std::vector<MandelbrotPoint>> MandelbrotZoneCalculatorThread::getComputedZone2(){
-    return outputZone2;
 }
 
 int MandelbrotZoneCalculatorThread::getOffset()
@@ -76,22 +57,22 @@ int MandelbrotZoneCalculatorThread::getIter_max()
     return iter_max;
 }
 
-float MandelbrotZoneCalculatorThread::getX_min()
+long double MandelbrotZoneCalculatorThread::getX_min()
 {
     return x_min;
 }
 
-float MandelbrotZoneCalculatorThread::getX_max()
+long double MandelbrotZoneCalculatorThread::getX_max()
 {
     return x_max;
 }
 
-float MandelbrotZoneCalculatorThread::getY_min()
+long double MandelbrotZoneCalculatorThread::getY_min()
 {
     return y_min;
 }
 
-float MandelbrotZoneCalculatorThread::getY_max()
+long double MandelbrotZoneCalculatorThread::getY_max()
 {
     return y_max;
 }
@@ -99,7 +80,7 @@ float MandelbrotZoneCalculatorThread::getY_max()
 
 void MandelbrotZoneCalculatorThread::run()
 {
-    qDebug() << "Calculation Thread :" << x_min << "," << x_max << "," << y_min << "," << y_max << "," << width_pixel<< "," << height_pixel << "," << iter_max << "," << offset_pixel << " - Starting...";
+    qDebug() << "Calculation Thread :" << (double)x_min << "," << (double)x_max << "," << (double)y_min << "," << (double)y_max << "," << width_pixel<< "," << height_pixel << "," << iter_max << "," << offset_pixel << " - Starting...";
     QElapsedTimer timer;
     timer.start();
 
@@ -111,15 +92,14 @@ void MandelbrotZoneCalculatorThread::run()
     emit zoneComputationCompleted(this);
 }
 
-//QPair<bool, int> MandelbrotZoneCalculatorThread::compute(float c_x, float c_y)
-MandelbrotPoint MandelbrotZoneCalculatorThread::compute(float c_x, float c_y)
+MandelbrotSetPoint MandelbrotZoneCalculatorThread::compute(long double c_x, long double c_y)
 {
-    float z_x = 0;
-    float z_y = 0;
-    float module = 0;
+    long double z_x = 0;
+    long double z_y = 0;
+    long double module = 0;
     int n = 0;
     while ((module<4) && (n<iter_max)) {
-        float zz_x = z_x * z_x - z_y * z_y + c_x;
+        long double zz_x = z_x * z_x - z_y * z_y + c_x;
         z_y = 2 * z_x * z_y + c_y;
         z_x = zz_x;
         module = z_x*z_x + z_y*z_y;
@@ -127,14 +107,14 @@ MandelbrotPoint MandelbrotZoneCalculatorThread::compute(float c_x, float c_y)
     }
     bool in_M = (module<4);
     //return QPair<bool, int>(in_M,n);
-    MandelbrotPoint myMandelbrotPoint;
-    myMandelbrotPoint.x = c_x;
-    myMandelbrotPoint.y = c_y;
-    myMandelbrotPoint.n = n;
-    myMandelbrotPoint.xn = z_x;
-    myMandelbrotPoint.yn = z_y;
-    myMandelbrotPoint.isInM = in_M;
-    return myMandelbrotPoint;
+    MandelbrotSetPoint myMandelbrotSetPoint;
+    myMandelbrotSetPoint.x = c_x;
+    myMandelbrotSetPoint.y = c_y;
+    myMandelbrotSetPoint.n = n;
+    myMandelbrotSetPoint.xn = z_x;
+    myMandelbrotSetPoint.yn = z_y;
+    myMandelbrotSetPoint.isInM = in_M;
+    return myMandelbrotSetPoint;
 }
 
 void MandelbrotZoneCalculatorThread::computeZone()
@@ -142,15 +122,14 @@ void MandelbrotZoneCalculatorThread::computeZone()
     for(int i=0; i<width_pixel; i++) {
 //        qDebug() << "   Line:" << i;
         for(int j=0; j<height_pixel; j++) {
-            float c_x = x_min + (x_max-x_min) * i / width_pixel ;
-            float c_y = y_min + (y_max-y_min) * j / height_pixel ;
-            MandelbrotPoint myMandelbrotPoint = compute(c_x,c_y);
-            QPair<bool, int> myBit(myMandelbrotPoint.isInM,myMandelbrotPoint.n);
-//            if (myMandelbrotPoint.n==0) {
-//                qDebug() << "Point:(" << c_x << "," << c_y << ") -> " << myMandelbrotPoint.n << myMandelbrotPoint.xn << myMandelbrotPoint.yn << myMandelbrotPoint.isInM;
+            long double c_x = x_min + (x_max-x_min) * i / width_pixel ;
+            long double c_y = y_min + (y_max-y_min) * j / height_pixel ;
+            MandelbrotSetPoint myMandelbrotSetPoint = compute(c_x,c_y);
+            QPair<bool, int> myBit(myMandelbrotSetPoint.isInM,myMandelbrotSetPoint.n);
+//            if (myMandelbrotSetPoint.n==0) {
+//                qDebug() << "Point:(" << c_x << "," << c_y << ") -> " << myMandelbrotSetPoint.n << myMandelbrotSetPoint.xn << myMandelbrotSetPoint.yn << myMandelbrotSetPoint.isInM;
 //            }
-            outputZone[i][j] = myBit;
-            outputZone2[i][j] = myMandelbrotPoint;
+            outputZone[i][j] = myMandelbrotSetPoint;
         }
     }
 }

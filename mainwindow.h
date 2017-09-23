@@ -1,9 +1,10 @@
 #ifndef MAINWINDOW_H
 #define MAINWINDOW_H
 
-#include <QMainWindow>
+#include <basictypes.h>
 #include <QList>
 #include <QLabel>
+#include <QMainWindow>
 #include <QElapsedTimer>
 #include <mandelbrotzonecalculatorthread.h>
 
@@ -28,9 +29,9 @@ private slots:
     void on_quitButton_clicked();
     void on_computeButton_clicked();
     void renderMandelbrot(MandelbrotZoneCalculatorThread * iThread);
-    void updateMandelbrotZoneCursorPosition(QPointF position);
-    void updateMandelbrotZoneCenter(QPointF position);
-    void updateMandelbrotZoneZoomAndCenter(QPointF position, int zoomFactor);
+    void updateMandelbrotZoneCursorPosition(PrecisionPoint position);
+    void updateMandelbrotZoneCenter(PrecisionPoint position);
+    void updateMandelbrotZoneZoomAndCenter(PrecisionPoint position, int zoomFactor);
 
 private:
     bool threadRunning;

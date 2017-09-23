@@ -1,6 +1,7 @@
 #ifndef MANDELBROTLABEL_H
 #define MANDELBROTLABEL_H
 
+#include <basictypes.h>
 #include <QLabel>
 
 class MandelbrotLabel : public QLabel
@@ -9,29 +10,29 @@ class MandelbrotLabel : public QLabel
 
 public:
     explicit MandelbrotLabel(QWidget *parent = nullptr);
-    void setZone(float ix_min, float ix_max, float iy_min, float iy_max, int iwidth_pixel, int iheight_pixel);
+    void setZone(long double ix_min, long double ix_max, long double iy_min, long double iy_max, int iwidth_pixel, int iheight_pixel);
     void setIter_max(int iiter_max);
-    bool isSameZone(float ix_min, float ix_max, float iy_min, float iy_max, int iwidth_pixel, int iheight_pixel, int iiter_max);
+    bool isSameZone(long double ix_min, long double ix_max, long double iy_min, long double iy_max, int iwidth_pixel, int iheight_pixel, int iiter_max);
     bool isSameSize(int iwidth_pixel, int iheight_pixel);
 
 protected:
     void mouseMoveEvent(QMouseEvent *event) override;
     void mousePressEvent(QMouseEvent *event) override;
     void wheelEvent(QWheelEvent *event) override;
-    QPointF convertScreenPositionToRealPosition(QPoint iPosition);
+    PrecisionPoint convertScreenPositionToRealPosition(QPoint iPosition);
 
 signals:
-    void mouseMoveHappened(QPointF position);
-    void mouseClickHappened(QPointF position);
-    void mouseWheelHappened(QPointF position, int zoomFactor);
+    void mouseMoveHappened(PrecisionPoint position);
+    void mouseClickHappened(PrecisionPoint position);
+    void mouseWheelHappened(PrecisionPoint position, int zoomFactor);
 
 public slots:
 
 private:
-    float x_min;
-    float x_max;
-    float y_min;
-    float y_max;
+    long double x_min;
+    long double x_max;
+    long double y_min;
+    long double y_max;
     int width_pixel;
     int height_pixel;
     //temporary until iter_max is fully dynamic

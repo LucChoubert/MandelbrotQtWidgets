@@ -7,7 +7,7 @@ MandelbrotLabel::MandelbrotLabel(QWidget *parent) : QLabel(parent)
     setMouseTracking(true);
 }
 
-void MandelbrotLabel::setZone(float ix_min, float ix_max, float iy_min, float iy_max, int iwidth_pixel, int iheight_pixel)
+void MandelbrotLabel::setZone(long double ix_min, long double ix_max, long double iy_min, long double iy_max, int iwidth_pixel, int iheight_pixel)
 {
     x_min = ix_min;
     x_max = ix_max;
@@ -22,7 +22,7 @@ void MandelbrotLabel::setIter_max(int iiter_max)
     iter_max = iiter_max;
 }
 
-bool MandelbrotLabel::isSameZone(float ix_min, float ix_max, float iy_min, float iy_max, int iwidth_pixel, int iheight_pixel, int iiter_max)
+bool MandelbrotLabel::isSameZone(long double ix_min, long double ix_max, long double iy_min, long double iy_max, int iwidth_pixel, int iheight_pixel, int iiter_max)
 {
     return (ix_min==x_min && ix_max==x_max && iy_min==y_min && iy_max==y_max && iwidth_pixel==width_pixel && iheight_pixel==height_pixel && iiter_max==iter_max);
 }
@@ -32,11 +32,12 @@ bool MandelbrotLabel::isSameSize(int iwidth_pixel, int iheight_pixel)
     return (iwidth_pixel==width_pixel && iheight_pixel==height_pixel);
 }
 
-QPointF MandelbrotLabel::convertScreenPositionToRealPosition(QPoint iPosition)
+PrecisionPoint MandelbrotLabel::convertScreenPositionToRealPosition(QPoint iPosition)
 {
-    float x = x_min + iPosition.x()*(x_max - x_min)/width_pixel;
-    float y = y_min + iPosition.y()*(y_max - y_min)/height_pixel;
-    return QPointF(x, y);
+    PrecisionPoint myPoint;
+    myPoint.x = x_min + iPosition.x()*(x_max - x_min)/width_pixel;
+    myPoint.y = y_min + iPosition.y()*(y_max - y_min)/height_pixel;
+    return myPoint;
 }
 
 void MandelbrotLabel::mouseMoveEvent(QMouseEvent *event)
