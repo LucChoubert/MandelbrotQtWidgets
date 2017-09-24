@@ -47,6 +47,39 @@ void MainWindow::updateMandelbrotSetDefinitionPanel() {
     ui->iterationsLineEdit->setText(stringIter);
 }
 
+void MainWindow::keyPressEvent(QKeyEvent *event)
+{
+    qDebug() << "Key pressed - " << event->key();
+    switch (event->key()) {
+    case Qt::Key_Left:
+        qDebug() << "Key pressed - " << "LEFT";
+        break;
+
+    case Qt::Key_Right:
+        qDebug() << "Key pressed - " << "RIGHT";
+        break;
+
+    case Qt::Key_Up:
+        qDebug() << "Key pressed - " << "UP";
+        break;
+
+    case Qt::Key_Down:
+        qDebug() << "Key pressed - " << "DOWN";
+        break;
+
+    case Qt::Key_Plus:
+        qDebug() << "Key pressed - " << "+";
+        break;
+
+    case Qt::Key_Minus:
+        qDebug() << "Key pressed - " << "-";
+        break;
+    }
+
+    // now call parent event handler, necessary?
+    QMainWindow::keyPressEvent(event);
+}
+
 void MainWindow::resizeEvent(QResizeEvent *event)
 {
 
@@ -205,72 +238,77 @@ void MainWindow::renderMandelbrot(MandelbrotZoneCalculatorThread * iThread)
     //Count reference of active threads
     nbThreadRunning--;
 
-    QString loggingText, stringTimer;
     qDebug() << "Signal received - Calculation Thread Completed for widget zone size " << iThread->getOffset() << iThread->getWidth() << iThread->getHeight()  ;
 
     if (nbThreadRunning==0) {
         qDebug() << "User perception - TOTAL Calculation completed in (sec):" << float(timer.elapsed())/1000;
+
+        //Compute and prepare display in status bar of total time of calculation
+        QString loggingText, stringTimer;
         stringTimer.setNum(float(timer.elapsed())/1000);
         loggingText = QString("Calculated:") + stringTimer + QString("s");
-    }
+
+        //We now have all the thread completed, we can start rendering
+        //Start measuring rendering time
+        QElapsedTimer renderingTimer;
+        renderingTimer.start();
 
 
-    //Start measuring rendering time
-    QElapsedTimer renderingTimer;
-    renderingTimer.start();
+        // Make sure pixmap is ready. May no more be usefull due to preliminary preparation done in paint event
+        const QPixmap * myPixmap = ui->mandelbrotZoneLabel->pixmap();
+        if ( !myPixmap )
+        {
+            qDebug() << "ERROR - NO IMAGE";
+            QSize mySize = ui->mandelbrotZoneLabel->size();
+            qDebug() << "        - Create Image of size:" << mySize;
+            QImage myImage(mySize, QImage::Format_RGB32);
+            ui->mandelbrotZoneLabel->setPixmap(QPixmap::fromImage(myImage));
+        }
+        myPixmap = ui->mandelbrotZoneLabel->pixmap();
+        QImage myImage( myPixmap->toImage() );
+        QRgb valueOFF = qRgb(189, 149, 39); // 0xffbd9527
+        QRgb valueIN = qRgb(0, 0, 0); // 0xffbd9527
 
-    //Draw zone of the Mandelbrot Set from newly computed area
-
-    const QPixmap * myPixmap = ui->mandelbrotZoneLabel->pixmap();
-    if ( !myPixmap )
-    {
-        //QImage myImage(iThread->getWidth(), iThread->getHeight(), QImage::Format_RGB32);
-        qDebug() << "ERROR - NO IMAGE";
-        QSize mySize = ui->mandelbrotZoneLabel->size();
-        qDebug() << "        - Create Image of size:" << mySize;
-        QImage myImage(mySize, QImage::Format_RGB32);
-        ui->mandelbrotZoneLabel->setPixmap(QPixmap::fromImage(myImage));
-    }
-
-    myPixmap = ui->mandelbrotZoneLabel->pixmap();
-    QImage myImage( myPixmap->toImage() );
-    QRgb valueOFF = qRgb(189, 149, 39); // 0xffbd9527
-    QRgb valueIN = qRgb(0, 0, 0); // 0xffbd9527
-
-    std::vector<std::vector<MandelbrotSetPoint>> myZone = iThread->getComputedZone();
-
-    for(int i=0; i<iThread->getWidth(); i++) {
-        for(int j=0; j<iThread->getHeight(); j++) {
-            if (myZone[i][j].isInM) {
-                myImage.setPixel(iThread->getOffset() + i, j, valueIN);
-            }
-            else {
-                long double xn = myZone[i][j].xn;
-                long double yn = myZone[i][j].yn;
-                long double zn = sqrt( xn * xn + yn * yn );
-                float hue = myZone[i][j].n - log((log(zn)))/log(2);
-                //hue = 0.95 + 80.0 * hue;
-                hue=(int)hue%360;
-                QColor color;
-                color.setHsv(hue,200,200);
-                myImage.setPixelColor(iThread->getOffset() + i, j, color);
+        //
+        for (int i=0; i< _listMandelbrotZoneCalculatorThread.size(); i++) {
+            //Draw zone of the Mandelbrot Set from newly computed area
+            MandelbrotZoneCalculatorThread *aThread = _listMandelbrotZoneCalculatorThread[i];
+            std::vector<std::vector<MandelbrotSetPoint>> myZone = aThread->getComputedZone();
+            for(int i=0; i<aThread->getWidth(); i++) {
+                for(int j=0; j<aThread->getHeight(); j++) {
+                    if (myZone[i][j].isInM) {
+                        myImage.setPixel(aThread->getOffset() + i, j, valueIN);
+                    }
+                    else {
+                        long double xn = myZone[i][j].xn;
+                        long double yn = myZone[i][j].yn;
+                        long double zn = sqrt( xn * xn + yn * yn );
+                        float hue = myZone[i][j].n - log((log(zn)))/log(2);
+                        //hue = 0.95 + 80.0 * hue;
+                        hue=(int)hue%360;
+                        QColor color;
+                        color.setHsv(hue,200,200);
+                        myImage.setPixelColor(aThread->getOffset() + i, j, color);
+                    }
+                }
             }
         }
-    }
 
-    ui->mandelbrotZoneLabel->setPixmap(QPixmap::fromImage(myImage));
+        //Display now the image completely built
+        ui->mandelbrotZoneLabel->setPixmap(QPixmap::fromImage(myImage));
+        qDebug() << "User perception - TOTAL Rendering completed in (sec):" << float(renderingTimer.elapsed())/1000;
 
-    renderingTime+=renderingTimer.elapsed();
-
-    if (nbThreadRunning==0) {
-        qDebug() << "User perception - TOTAL Rendering completed in (sec):" << float(renderingTime)/1000;
-        stringTimer.setNum(float(renderingTime)/1000);
+        // Compute total rendering time and finalize preparation of text for status bar
+        stringTimer.setNum(float(renderingTimer.elapsed())/1000);
         loggingText = loggingText + QString(" - Rendered:") + stringTimer + QString("s");
 
-        //Status bar management
+        //Display all calculation time in Status bar
         statusMessage.setText(loggingText);
+
+        //Store that all threads have now completed
         threadRunning = false;
 
+        //Aggregate the 4 zones areas to store that and to use that to compare with new repain event
         long double x_min = 1000000, x_max = -1000000, y_min = 1000000, y_max = -1000000;
         int width = 0, height = 0, iter_max = 0;
         for (int i=0; i< _listMandelbrotZoneCalculatorThread.size(); i++) {
@@ -282,12 +320,8 @@ void MainWindow::renderMandelbrot(MandelbrotZoneCalculatorThread * iThread)
             if (_listMandelbrotZoneCalculatorThread[i]->getHeight() > height) {height = _listMandelbrotZoneCalculatorThread[i]->getHeight();}
             if (_listMandelbrotZoneCalculatorThread[i]->getIter_max() > iter_max) {iter_max = _listMandelbrotZoneCalculatorThread[i]->getIter_max();}
         }
-
         qDebug() << "User perception - TOTAL zone computed:" << (float)x_min << (float)x_max << (float)y_min << (float)y_max << width << height << iter_max;
-
         ui->mandelbrotZoneLabel->setZone(x_min,x_max,y_min,y_max,width,height);
         ui->mandelbrotZoneLabel->setIter_max(iter_max);
     }
-
-
 }
