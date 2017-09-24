@@ -20,11 +20,31 @@ MainWindow::MainWindow(QWidget *parent) :
     QObject::connect(ui->mandelbrotZoneLabel, &MandelbrotLabel::mouseMoveHappened, this, &MainWindow::updateMandelbrotZoneCursorPosition);
     QObject::connect(ui->mandelbrotZoneLabel, &MandelbrotLabel::mouseClickHappened, this, &MainWindow::updateMandelbrotZoneCenter);
     QObject::connect(ui->mandelbrotZoneLabel, &MandelbrotLabel::mouseWheelHappened, this, &MainWindow::updateMandelbrotZoneZoomAndCenter);
+    mandelbrotSetDefinition.x0 = ui->x0LineEdit->text().toFloat();
+    mandelbrotSetDefinition.y0 = ui->y0LineEdit->text().toFloat();
+    mandelbrotSetDefinition.iter_max = ui->iterationsLineEdit->text().toInt();
+    mandelbrotSetDefinition.zoom = ui->zoomLineEdit->text().toFloat();
 }
 
 MainWindow::~MainWindow()
 {
     delete ui;
+}
+
+void MainWindow::updateMandelbrotSetDefinitionPanel() {
+    QString stringX, stringY, stringZoom, stringIter;
+
+    stringX.setNum((float)mandelbrotSetDefinition.x0);
+    ui->x0LineEdit->setText(stringX);
+
+    stringY.setNum((float)mandelbrotSetDefinition.y0);
+    ui->y0LineEdit->setText(stringY);
+
+    stringZoom.setNum((float)mandelbrotSetDefinition.zoom);
+    ui->zoomLineEdit->setText(stringZoom);
+
+    stringIter.setNum((int)mandelbrotSetDefinition.iter_max);
+    ui->iterationsLineEdit->setText(stringIter);
 }
 
 void MainWindow::resizeEvent(QResizeEvent *event)
@@ -48,50 +68,11 @@ void MainWindow::on_quitButton_clicked()
 void MainWindow::on_computeButton_clicked()
 {
     //qDebug() << "Compute Button pushed";
-    computeMandelbrot();
-}
-
-void MainWindow::updateMandelbrotZoneCursorPosition(PrecisionPoint position)
-{
-    //qDebug() << "updateMandelbrotZoneCursorPosition:" << position;
-    QString stringX, stringY;
-    stringX.setNum((float)position.x, 'g', 100);
-    stringY.setNum((float)position.y, 'g', 100);
-    ui->statusBar->showMessage(QString("Cursor:(") + stringX + QString(",") + stringY + QString(")"),2500);
-
-}
-
-void MainWindow::updateMandelbrotZoneCenter(PrecisionPoint position)
-{
-    //qDebug() << "updateMandelbrotZoneCenter:" << position;
-    QString stringX, stringY;
-    stringX.setNum((float)position.x);
-    stringY.setNum((float)position.y);
-    ui->x0LineEdit->setText(stringX);
-    ui->y0LineEdit->setText(stringY);
-}
-
-void MainWindow::updateMandelbrotZoneZoomAndCenter(PrecisionPoint position, int zoomFactor)
-{
-    qDebug() << "updateMandelbrotZoneZoomAndCenter:" << (float)position.x << (float)position.y << zoomFactor;
-    QString stringX, stringY, stringZoom;
-    stringX.setNum((float)position.x);
-    stringY.setNum((float)position.y);
-    float zoom = ui->zoomLineEdit->text().toFloat();
-    stringZoom.setNum(zoom+zoomFactor*0.5);
-    ui->x0LineEdit->setText(stringX);
-    ui->y0LineEdit->setText(stringY);
-    ui->zoomLineEdit->setText(stringZoom);
-}
-
-void MainWindow::computeMandelbrot()
-{
-
     bool ok1, ok2, ok3, ok4;
-    int iter_max = ui->iterationsLineEdit->text().toInt(&ok1);
-    float zoom = ui->zoomLineEdit->text().toFloat(&ok2);
-    long double x0 = ui->x0LineEdit->text().toFloat(&ok3);
-    long double y0 = ui->y0LineEdit->text().toFloat(&ok4);
+    mandelbrotSetDefinition.x0 = ui->x0LineEdit->text().toFloat(&ok1);
+    mandelbrotSetDefinition.y0 = ui->y0LineEdit->text().toFloat(&ok2);
+    mandelbrotSetDefinition.iter_max = ui->iterationsLineEdit->text().toInt(&ok3);
+    mandelbrotSetDefinition.zoom = ui->zoomLineEdit->text().toFloat(&ok4);
 
     if (!ok1 || !ok2 || !ok3 || !ok4)
     {
@@ -101,81 +82,122 @@ void MainWindow::computeMandelbrot()
         messageBox.setWindowTitle("Error");
         messageBox.exec();
     }
+
+    ui->mandelbrotZoneLabel->repaint();
+    //computeMandelbrot();
+}
+
+void MainWindow::updateMandelbrotZoneCursorPosition(PrecisionPoint position)
+{
+    //qDebug() << "updateMandelbrotZoneCursorPosition:" << position;
+    QString stringX, stringY;
+    stringX.setNum((float)position.x, 'g', 100);
+    stringY.setNum((float)position.y, 'g', 100);
+    ui->statusBar->showMessage(QString("Cursor:(") + stringX + QString(",") + stringY + QString(")"),10000);
+}
+
+void MainWindow::updateMandelbrotZoneCenter(PrecisionPoint position)
+{
+    //qDebug() << "updateMandelbrotZoneCenter:" << position;
+    mandelbrotSetDefinition.x0 = position.x;
+    mandelbrotSetDefinition.y0 = position.y;
+    updateMandelbrotSetDefinitionPanel();
+    ui->mandelbrotZoneLabel->repaint();
+}
+
+void MainWindow::updateMandelbrotZoneZoomAndCenter(PrecisionPoint position, int zoomFactor)
+{
+    qDebug() << "updateMandelbrotZoneZoomAndCenter:" << (float)position.x << (float)position.y << zoomFactor;
+
+    mandelbrotSetDefinition.x0 = position.x;
+    mandelbrotSetDefinition.y0 = position.y;
+    mandelbrotSetDefinition.zoom += zoomFactor*0.5;
+
+    updateMandelbrotSetDefinitionPanel();
+    ui->mandelbrotZoneLabel->repaint();
+}
+
+void MainWindow::computeMandelbrot()
+{
+    long double x0 = mandelbrotSetDefinition.x0;
+    long double y0 = mandelbrotSetDefinition.y0;
+    float zoom = mandelbrotSetDefinition.zoom;
+    int iter_max = mandelbrotSetDefinition.iter_max;
+
+    long double half_range = pow(2.0,(-zoom-1));
+    long double x_min = x0 - half_range;
+    long double x_max = x0 + half_range;
+    long double y_min = y0 - half_range;
+    long double y_max = y0 + half_range;
+    QSize mySize = ui->mandelbrotZoneLabel->size();
+
+    if (ui->mandelbrotZoneLabel->isSameZone(x_min,x_max,y_min,y_max,mySize.width(),mySize.height(),iter_max)) {
+        //qDebug() << "SKIPPED CALCULATION - Same Area";
+        return;
+    }
+
+    if (threadRunning) {
+        //qDebug() << "SKIPPED CALCULATION - Calculation Threads already running";
+        return;
+    }
     else {
-        long double half_range = pow(2.0,(-zoom-1));
-        long double x_min = x0 - half_range;
-        long double x_max = x0 + half_range;
-        long double y_min = y0 - half_range;
-        long double y_max = y0 + half_range;
-        QSize mySize = ui->mandelbrotZoneLabel->size();
+        threadRunning = true;
+    }
 
-        if (ui->mandelbrotZoneLabel->isSameZone(x_min,x_max,y_min,y_max,mySize.width(),mySize.height(),iter_max)) {
-            //qDebug() << "SKIPPED CALCULATION - Same Area";
-            return;
-        }
+    //mandelbrotZoneLabel doest not have the right pixmap size so let's recreate one with the appropriate size
+    if (!ui->mandelbrotZoneLabel->isSameSize(mySize.width(),mySize.height())) {
+        QImage myImage(mySize, QImage::Format_RGB32);
+        ui->mandelbrotZoneLabel->setPixmap(QPixmap::fromImage(myImage));
+    }
 
-        if (threadRunning) {
-            //qDebug() << "SKIPPED CALCULATION - Calculation Threads already running";
-            return;
-        }
-        else {
-            threadRunning = true;
-        }
+    qDebug() << "======== Mandelbrot Set Area: ========";
+    qDebug() << " Max Iteration: " << iter_max;
+    qDebug() << "        Center: " << (float) x0 << " " << (float)y0;
+    qDebug() << "  Width (2^-p): " << (float)(2*half_range);
+    qDebug() << " Height (2^-p): " << (float)(2*half_range);
+    qDebug() << "             X: " << (float)x_min << " " << (float)x_max;
+    qDebug() << "             Y: " << (float)y_min << " " << (float)y_max;
+    qDebug() << "========     Window Area:     ========";
+    qDebug() << "Mandelbrot Widget Size" << mySize;
+    qDebug() << "======================================";
 
-        //mandelbrotZoneLabel doest not have the right pixmap size so let's recreate one with the appropriate size
-        if (!ui->mandelbrotZoneLabel->isSameSize(mySize.width(),mySize.height())) {
-            QImage myImage(mySize, QImage::Format_RGB32);
-            ui->mandelbrotZoneLabel->setPixmap(QPixmap::fromImage(myImage));
-        }
+    //Status bar management
+    statusMessage.setText(QString("Calculation Running"));
 
-        qDebug() << "======== Mandelbrot Set Area: ========";
-        qDebug() << " Max Iteration: " << iter_max;
-        qDebug() << "        Center: " << (float) x0 << " " << (float)y0;
-        qDebug() << "  Width (2^-p): " << (float)(2*half_range);
-        qDebug() << " Height (2^-p): " << (float)(2*half_range);
-        qDebug() << "             X: " << (float)x_min << " " << (float)x_max;
-        qDebug() << "             Y: " << (float)y_min << " " << (float)y_max;
-        qDebug() << "========     Window Area:     ========";
-        qDebug() << "Mandelbrot Widget Size" << mySize;
-        qDebug() << "======================================";
+    //Reset rendering time value
+    renderingTime = 0;
 
-        //Status bar management
-        statusMessage.setText(QString("Calculation Running"));
+    //Start measuring calculation time
+    timer.start();
 
-        //Reset rendering time value
-        renderingTime = 0;
+    // Allocate thread manager objects if not done already
 
-        //Start measuring calculation time
-        timer.start();
+    int nBThreads = QThread::idealThreadCount();
 
-        // Allocate thread manager objects if not done already
-
-        int nBThreads = QThread::idealThreadCount();
-
-        if (_listMandelbrotZoneCalculatorThread.empty()) {
-            for (int i=0; i<nBThreads; i++) {
-                MandelbrotZoneCalculatorThread * myThread = new MandelbrotZoneCalculatorThread();
-                _listMandelbrotZoneCalculatorThread.push_back(myThread);
-                QObject::connect(myThread, &MandelbrotZoneCalculatorThread::zoneComputationCompleted, this, &MainWindow::renderMandelbrot);
-            }
-        }
-
-        // split the zone in smaller zones based on the number of available threads, set configuration of the threads, and start them
-        nBThreads = _listMandelbrotZoneCalculatorThread.size();
-        nbThreadRunning = nBThreads;
-        int pixel_range = ceil((float)mySize.width() / nBThreads);
-        int zone_offset = 0;
-        for (int i=0; i< nBThreads; i++) {
-            long double zone_x_min = x_min + i * (x_max - x_min) / nBThreads;
-            long double zone_x_max = x_min + (i + 1) * (x_max - x_min) / nBThreads;
-            int zone_width = std::min(pixel_range, mySize.width() - zone_offset) ;
-            int zone_height = mySize.height();
-            _listMandelbrotZoneCalculatorThread[i]->setCalculationDetails(zone_x_min,zone_x_max,y_min,y_max,zone_width,zone_height,iter_max,zone_offset);
-            _listMandelbrotZoneCalculatorThread[i]->start();
-            zone_offset += zone_width;
-
+    if (_listMandelbrotZoneCalculatorThread.empty()) {
+        for (int i=0; i<nBThreads; i++) {
+            MandelbrotZoneCalculatorThread * myThread = new MandelbrotZoneCalculatorThread();
+            _listMandelbrotZoneCalculatorThread.push_back(myThread);
+            QObject::connect(myThread, &MandelbrotZoneCalculatorThread::zoneComputationCompleted, this, &MainWindow::renderMandelbrot);
         }
     }
+
+    // split the zone in smaller zones based on the number of available threads, set configuration of the threads, and start them
+    nBThreads = _listMandelbrotZoneCalculatorThread.size();
+    nbThreadRunning = nBThreads;
+    int pixel_range = ceil((float)mySize.width() / nBThreads);
+    int zone_offset = 0;
+    for (int i=0; i< nBThreads; i++) {
+        long double zone_x_min = x_min + i * (x_max - x_min) / nBThreads;
+        long double zone_x_max = x_min + (i + 1) * (x_max - x_min) / nBThreads;
+        int zone_width = std::min(pixel_range, mySize.width() - zone_offset) ;
+        int zone_height = mySize.height();
+        _listMandelbrotZoneCalculatorThread[i]->setCalculationDetails(zone_x_min,zone_x_max,y_min,y_max,zone_width,zone_height,iter_max,zone_offset);
+        _listMandelbrotZoneCalculatorThread[i]->start();
+        zone_offset += zone_width;
+
+    }
+
 }
 
 void MainWindow::renderMandelbrot(MandelbrotZoneCalculatorThread * iThread)

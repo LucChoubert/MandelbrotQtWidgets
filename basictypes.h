@@ -1,12 +1,23 @@
 #ifndef BASICTYPES_H
 #define BASICTYPES_H
 
+struct MandelbrotSetDefinition {
+    // Coordinate of the center point
+    long double x0;
+    long double y0;
+    // Max iterations
+    int iter_max;
+    //zoom parameter
+    float zoom;
+};
+typedef struct MandelbrotSetDefinition MandelbrotSetDefinition;
+
 struct PrecisionPoint {
     // Coordinate of the point
     long double x;
     long double y;
 };
-typedef struct MandelbrotPoint MandelbrotPoint;
+typedef struct PrecisionPoint PrecisionPoint;
 
 struct MandelbrotSetPoint {
     // Coordinate of the point

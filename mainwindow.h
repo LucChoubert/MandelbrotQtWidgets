@@ -28,12 +28,14 @@ protected:
 private slots:
     void on_quitButton_clicked();
     void on_computeButton_clicked();
+    void updateMandelbrotSetDefinitionPanel();
     void renderMandelbrot(MandelbrotZoneCalculatorThread * iThread);
     void updateMandelbrotZoneCursorPosition(PrecisionPoint position);
     void updateMandelbrotZoneCenter(PrecisionPoint position);
     void updateMandelbrotZoneZoomAndCenter(PrecisionPoint position, int zoomFactor);
 
 private:
+    MandelbrotSetDefinition mandelbrotSetDefinition;
     bool threadRunning;
     int nbThreadRunning;
     QLabel statusMessage;
