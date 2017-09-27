@@ -25,6 +25,8 @@ protected:
     void paintEvent(QPaintEvent *event) override;
     void keyPressEvent(QKeyEvent *event) override;
     void computeMandelbrot();
+    QString getStatusMessagePrefix();
+    QString getStringFromLongDouble(const long double iLongDouble);
 
 private slots:
     void on_quitButton_clicked();

@@ -5,6 +5,7 @@
 #include <QMessageBox>
 #include <QStatusBar>
 #include <QPlainTextEdit>
+#include <sstream>
 
 MainWindow::MainWindow(QWidget *parent) :
     QMainWindow(parent),
@@ -31,13 +32,23 @@ MainWindow::~MainWindow()
     delete ui;
 }
 
+QString MainWindow::getStringFromLongDouble(const long double iLongDouble)
+{
+  std::stringstream ss;
+  ss << iLongDouble;
+
+  return QString::fromStdString(ss.str());
+}
+
 void MainWindow::updateMandelbrotSetDefinitionPanel() {
     QString stringX, stringY, stringZoom, stringIter;
 
-    stringX.setNum((float)mandelbrotSetDefinition.x0);
+    //stringX.setNum((float)mandelbrotSetDefinition.x0);
+    stringX = getStringFromLongDouble(mandelbrotSetDefinition.x0);
     ui->x0LineEdit->setText(stringX);
 
-    stringY.setNum((float)mandelbrotSetDefinition.y0);
+    //stringY.setNum((float)mandelbrotSetDefinition.y0);
+    stringY = getStringFromLongDouble(mandelbrotSetDefinition.y0);
     ui->y0LineEdit->setText(stringY);
 
     stringZoom.setNum((float)mandelbrotSetDefinition.zoom);
@@ -140,7 +151,7 @@ void MainWindow::updateMandelbrotZoneCenter(PrecisionPoint position)
 
 void MainWindow::updateMandelbrotZoneZoomAndCenter(PrecisionPoint position, int zoomFactor)
 {
-    qDebug() << "updateMandelbrotZoneZoomAndCenter:" << (float)position.x << (float)position.y << zoomFactor;
+    //qDebug() << "updateMandelbrotZoneZoomAndCenter:" << (float)position.x << (float)position.y << zoomFactor;
 
     mandelbrotSetDefinition.x0 = position.x;
     mandelbrotSetDefinition.y0 = position.y;
@@ -148,6 +159,18 @@ void MainWindow::updateMandelbrotZoneZoomAndCenter(PrecisionPoint position, int 
 
     updateMandelbrotSetDefinitionPanel();
     ui->mandelbrotZoneLabel->repaint();
+}
+
+QString MainWindow::getStatusMessagePrefix() {
+    QString loggingText, statusText;
+    //getStringFromLongDouble
+    statusText = statusText + QString("iter_max=") + loggingText.setNum(mandelbrotSetDefinition.iter_max) + QString("/");
+    statusText = statusText + QString("zoom=") + loggingText.setNum((float)mandelbrotSetDefinition.zoom) + QString("/");
+    //statusText = statusText + QString("x0=") + loggingText.setNum((float)mandelbrotSetDefinition.x0) + QString("/");
+    //statusText = statusText + QString("y0=") + loggingText.setNum((float)mandelbrotSetDefinition.y0) + QString("/");
+    statusText = statusText + QString("x0=") + getStringFromLongDouble(mandelbrotSetDefinition.x0) + QString("/");
+    statusText = statusText + QString("y0=") + getStringFromLongDouble(mandelbrotSetDefinition.y0) + QString("/");
+    return statusText;
 }
 
 void MainWindow::computeMandelbrot()
@@ -185,17 +208,22 @@ void MainWindow::computeMandelbrot()
 
     qDebug() << "======== Mandelbrot Set Area: ========";
     qDebug() << " Max Iteration: " << iter_max;
-    qDebug() << "        Center: " << (float) x0 << " " << (float)y0;
+    qDebug() << "        Center: " << getStringFromLongDouble(x0) << " " << getStringFromLongDouble(y0);
+    qDebug() << "   Zoom factor: " << (float)(zoom);
     qDebug() << "  Width (2^-p): " << (float)(2*half_range);
     qDebug() << " Height (2^-p): " << (float)(2*half_range);
-    qDebug() << "             X: " << (float)x_min << " " << (float)x_max;
-    qDebug() << "             Y: " << (float)y_min << " " << (float)y_max;
+    qDebug() << "             X: " << getStringFromLongDouble(x_min) << " " << getStringFromLongDouble(x_max);
+    qDebug() << "             Y: " << getStringFromLongDouble(y_min) << " " << getStringFromLongDouble(y_max);
     qDebug() << "========     Window Area:     ========";
     qDebug() << "Mandelbrot Widget Size" << mySize;
     qDebug() << "======================================";
 
     //Status bar management
-    statusMessage.setText(QString("Calculation Running"));
+    //statusText+=getStatusMessagePrefix();
+    //statusText+=QString(" - Calculation Running");
+    //statusMessage.setText(loggingText.setNum(iter_max) + QString(" ") + loggingText.setNum((float)zoom) + QString(" ") + loggingText.setNum((float)x0) + QString(" ") + loggingText.setNum((float)y0) + QString(" - Calculation Running"));
+    //statusMessage.setText(QString("Calculation Running"));
+    statusMessage.setText(getStatusMessagePrefix() + QString(" - Calculation Running"));
 
     //Reset rendering time value
     renderingTime = 0;
@@ -238,15 +266,15 @@ void MainWindow::renderMandelbrot(MandelbrotZoneCalculatorThread * iThread)
     //Count reference of active threads
     nbThreadRunning--;
 
-    qDebug() << "Signal received - Calculation Thread Completed for widget zone size " << iThread->getOffset() << iThread->getWidth() << iThread->getHeight()  ;
+    //qDebug() << "Signal received - Calculation Thread Completed for widget zone size " << iThread->getOffset() << iThread->getWidth() << iThread->getHeight()  ;
 
     if (nbThreadRunning==0) {
-        qDebug() << "User perception - TOTAL Calculation completed in (sec):" << float(timer.elapsed())/1000;
+        //qDebug() << "User perception - TOTAL Calculation completed in (sec):" << float(timer.elapsed())/1000;
 
         //Compute and prepare display in status bar of total time of calculation
         QString loggingText, stringTimer;
         stringTimer.setNum(float(timer.elapsed())/1000);
-        loggingText = QString("Calculated:") + stringTimer + QString("s");
+        loggingText = QString(" - Calculated:") + stringTimer + QString("s");
 
         //We now have all the thread completed, we can start rendering
         //Start measuring rendering time
@@ -296,14 +324,14 @@ void MainWindow::renderMandelbrot(MandelbrotZoneCalculatorThread * iThread)
 
         //Display now the image completely built
         ui->mandelbrotZoneLabel->setPixmap(QPixmap::fromImage(myImage));
-        qDebug() << "User perception - TOTAL Rendering completed in (sec):" << float(renderingTimer.elapsed())/1000;
+        //qDebug() << "User perception - TOTAL Rendering completed in (sec):" << float(renderingTimer.elapsed())/1000;
 
         // Compute total rendering time and finalize preparation of text for status bar
         stringTimer.setNum(float(renderingTimer.elapsed())/1000);
-        loggingText = loggingText + QString(" - Rendered:") + stringTimer + QString("s");
+        loggingText = loggingText + QString(" + Rendered:") + stringTimer + QString("s");
 
         //Display all calculation time in Status bar
-        statusMessage.setText(loggingText);
+        statusMessage.setText(getStatusMessagePrefix() + loggingText);
 
         //Store that all threads have now completed
         threadRunning = false;
