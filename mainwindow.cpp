@@ -35,6 +35,7 @@ MainWindow::~MainWindow()
 QString MainWindow::getStringFromLongDouble(const long double iLongDouble)
 {
   std::stringstream ss;
+  ss.precision(50);
   ss << iLongDouble;
 
   return QString::fromStdString(ss.str());
@@ -163,7 +164,6 @@ void MainWindow::updateMandelbrotZoneZoomAndCenter(PrecisionPoint position, int 
 
 QString MainWindow::getStatusMessagePrefix() {
     QString loggingText, statusText;
-    //getStringFromLongDouble
     statusText = statusText + QString("iter_max=") + loggingText.setNum(mandelbrotSetDefinition.iter_max) + QString("/");
     statusText = statusText + QString("zoom=") + loggingText.setNum((float)mandelbrotSetDefinition.zoom) + QString("/");
     //statusText = statusText + QString("x0=") + loggingText.setNum((float)mandelbrotSetDefinition.x0) + QString("/");
