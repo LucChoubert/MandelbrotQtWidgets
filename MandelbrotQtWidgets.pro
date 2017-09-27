@@ -36,7 +36,8 @@ HEADERS += \
     basictypes.h
 
 FORMS += \
-        mainwindow.ui
+        mainwindow.ui \
+    inputsfieldsdialog.ui
 
 DISTFILES += \
     images/mandelbrot-1.jpg

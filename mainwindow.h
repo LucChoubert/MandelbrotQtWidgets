@@ -36,6 +36,8 @@ private slots:
     void updateMandelbrotZoneCursorPosition(PrecisionPoint position);
     void updateMandelbrotZoneCenter(PrecisionPoint position);
     void updateMandelbrotZoneZoomAndCenter(PrecisionPoint position, int zoomFactor);
+    void actionDisplay_input_fields();
+    void actionInput_fields_Popup();
 
 private:
     MandelbrotSetDefinition mandelbrotSetDefinition;

@@ -1,5 +1,6 @@
 #include "mainwindow.h"
 #include "ui_mainwindow.h"
+#include "ui_inputsfieldsdialog.h"
 #include "mandelbrotzonecalculatorthread.h"
 #include <QDebug>
 #include <QMessageBox>
@@ -18,9 +19,13 @@ MainWindow::MainWindow(QWidget *parent) :
 {
     ui->setupUi(this);
     ui->statusBar->addPermanentWidget(&statusMessage);
+    ui->InputFieldsWidget->setVisible(ui->actionDisplay_input_fields->isChecked());
     QObject::connect(ui->mandelbrotZoneLabel, &MandelbrotLabel::mouseMoveHappened, this, &MainWindow::updateMandelbrotZoneCursorPosition);
     QObject::connect(ui->mandelbrotZoneLabel, &MandelbrotLabel::mouseClickHappened, this, &MainWindow::updateMandelbrotZoneCenter);
     QObject::connect(ui->mandelbrotZoneLabel, &MandelbrotLabel::mouseWheelHappened, this, &MainWindow::updateMandelbrotZoneZoomAndCenter);
+    QObject::connect(ui->actionDisplay_input_fields, &QAction::triggered, this, &MainWindow::actionDisplay_input_fields);
+    QObject::connect(ui->actionInput_fields_Popup, &QAction::triggered, this, &MainWindow::actionInput_fields_Popup);
+
     mandelbrotSetDefinition.x0 = ui->x0LineEdit->text().toFloat();
     mandelbrotSetDefinition.y0 = ui->y0LineEdit->text().toFloat();
     mandelbrotSetDefinition.iter_max = ui->iterationsLineEdit->text().toInt();
@@ -30,6 +35,20 @@ MainWindow::MainWindow(QWidget *parent) :
 MainWindow::~MainWindow()
 {
     delete ui;
+}
+
+void MainWindow::actionDisplay_input_fields()
+{
+    ui->InputFieldsWidget->setVisible(ui->actionDisplay_input_fields->isChecked());
+}
+
+void MainWindow::actionInput_fields_Popup()
+{
+    qDebug() << "Popup Opening... ";
+    QDialog *aPopup = new QDialog();
+    Ui::InputFieldsDialog aInputFieldsDialog;
+    aInputFieldsDialog.setupUi(aPopup);
+    aPopup->show();
 }
 
 QString MainWindow::getStringFromLongDouble(const long double iLongDouble)
