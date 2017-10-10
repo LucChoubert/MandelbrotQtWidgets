@@ -35,7 +35,11 @@ private slots:
     void renderMandelbrot(MandelbrotZoneCalculatorThread * iThread);
     void updateMandelbrotZoneCursorPosition(PrecisionPoint position);
     void updateMandelbrotZoneCenter(PrecisionPoint position);
+    void updateMandelbrotZoneZoom(int zoomFactor);
+    void updateMandelbrotZoneIterMax(int iterFactor);
     void updateMandelbrotZoneZoomAndCenter(PrecisionPoint position, int zoomFactor);
+    void moveMandelbrotZoneHorizontaly(int factor);
+    void moveMandelbrotZoneVerticaly(int factor);
     void actionDisplay_input_fields();
     void actionInput_fields_Popup();
 

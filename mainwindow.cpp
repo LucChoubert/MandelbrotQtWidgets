@@ -84,26 +84,42 @@ void MainWindow::keyPressEvent(QKeyEvent *event)
     switch (event->key()) {
     case Qt::Key_Left:
         qDebug() << "Key pressed - " << "LEFT";
+        moveMandelbrotZoneHorizontaly(-10);
         break;
 
     case Qt::Key_Right:
         qDebug() << "Key pressed - " << "RIGHT";
+        moveMandelbrotZoneHorizontaly(10);
         break;
 
     case Qt::Key_Up:
         qDebug() << "Key pressed - " << "UP";
+        moveMandelbrotZoneVerticaly(-10);
         break;
 
     case Qt::Key_Down:
         qDebug() << "Key pressed - " << "DOWN";
+        moveMandelbrotZoneVerticaly(10);
         break;
 
     case Qt::Key_Plus:
-        qDebug() << "Key pressed - " << "+";
+        //qDebug() << "Key pressed - " << "+";
+        updateMandelbrotZoneZoom(1);
         break;
 
     case Qt::Key_Minus:
-        qDebug() << "Key pressed - " << "-";
+        //qDebug() << "Key pressed - " << "-";
+        updateMandelbrotZoneZoom(-1);
+        break;
+
+    case Qt::Key_PageUp:
+        //qDebug() << "Key pressed - " << "Key_PageUp";
+        updateMandelbrotZoneIterMax(1);
+        break;
+
+    case Qt::Key_PageDown:
+        //qDebug() << "Key pressed - " << "Key_PageDown";
+        updateMandelbrotZoneIterMax(-1);
         break;
     }
 
@@ -169,6 +185,16 @@ void MainWindow::updateMandelbrotZoneCenter(PrecisionPoint position)
     ui->mandelbrotZoneLabel->repaint();
 }
 
+void MainWindow::updateMandelbrotZoneZoom(int zoomFactor)
+{
+    //qDebug() << "updateMandelbrotZoneZoom:" << zoomFactor;
+
+    mandelbrotSetDefinition.zoom += zoomFactor*0.5;
+
+    updateMandelbrotSetDefinitionPanel();
+    ui->mandelbrotZoneLabel->repaint();
+}
+
 void MainWindow::updateMandelbrotZoneZoomAndCenter(PrecisionPoint position, int zoomFactor)
 {
     //qDebug() << "updateMandelbrotZoneZoomAndCenter:" << (float)position.x << (float)position.y << zoomFactor;
@@ -176,6 +202,35 @@ void MainWindow::updateMandelbrotZoneZoomAndCenter(PrecisionPoint position, int 
     mandelbrotSetDefinition.x0 = position.x;
     mandelbrotSetDefinition.y0 = position.y;
     mandelbrotSetDefinition.zoom += zoomFactor*0.5;
+
+    updateMandelbrotSetDefinitionPanel();
+    ui->mandelbrotZoneLabel->repaint();
+}
+
+void MainWindow::updateMandelbrotZoneIterMax(int iterFactor)
+{
+    //qDebug() << "updateMandelbrotZoneIterMax:" << iterFactor;
+
+    mandelbrotSetDefinition.iter_max += iterFactor*1000;
+    if (mandelbrotSetDefinition.iter_max < 500) {mandelbrotSetDefinition.iter_max = 500;}
+
+    updateMandelbrotSetDefinitionPanel();
+    ui->mandelbrotZoneLabel->repaint();
+}
+
+void MainWindow::moveMandelbrotZoneHorizontaly(int factor)
+{
+    long double delta = pow(2.0,(-mandelbrotSetDefinition.zoom));
+    mandelbrotSetDefinition.x0 += (delta*factor)/100;
+
+    updateMandelbrotSetDefinitionPanel();
+    ui->mandelbrotZoneLabel->repaint();
+}
+
+void MainWindow::moveMandelbrotZoneVerticaly(int factor)
+{
+    long double delta = pow(2.0,(-mandelbrotSetDefinition.zoom));
+    mandelbrotSetDefinition.y0 += (delta*factor)/100;
 
     updateMandelbrotSetDefinitionPanel();
     ui->mandelbrotZoneLabel->repaint();
