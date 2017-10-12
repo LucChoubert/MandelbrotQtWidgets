@@ -7,9 +7,11 @@
 #include <QStatusBar>
 #include <QPlainTextEdit>
 #include <sstream>
+#include <unistd.h>
 
 MainWindow::MainWindow(QWidget *parent) :
     QMainWindow(parent),
+    performanceBenchmark(false),
     threadRunning(false),
     nbThreadRunning(0),
     statusMessage(QString("Welcome into Mandelbrot set beauty")),
@@ -410,7 +412,7 @@ void MainWindow::renderMandelbrot(MandelbrotZoneCalculatorThread * iThread)
         //Store that all threads have now completed
         threadRunning = false;
 
-        //Aggregate the 4 zones areas to store that and to use that to compare with new repain event
+        //Aggregate the 4 zones areas to store that and to use that to compare with new repaint event
         long double x_min = 1000000, x_max = -1000000, y_min = 1000000, y_max = -1000000;
         int width = 0, height = 0, iter_max = 0;
         for (int i=0; i< _listMandelbrotZoneCalculatorThread.size(); i++) {
@@ -422,8 +424,25 @@ void MainWindow::renderMandelbrot(MandelbrotZoneCalculatorThread * iThread)
             if (_listMandelbrotZoneCalculatorThread[i]->getHeight() > height) {height = _listMandelbrotZoneCalculatorThread[i]->getHeight();}
             if (_listMandelbrotZoneCalculatorThread[i]->getIter_max() > iter_max) {iter_max = _listMandelbrotZoneCalculatorThread[i]->getIter_max();}
         }
-        qDebug() << "User perception - TOTAL zone computed:" << (float)x_min << (float)x_max << (float)y_min << (float)y_max << width << height << iter_max;
+        //qDebug() << "User perception - TOTAL zone computed:" << (float)x_min << (float)x_max << (float)y_min << (float)y_max << width << height << iter_max;
         ui->mandelbrotZoneLabel->setZone(x_min,x_max,y_min,y_max,width,height);
         ui->mandelbrotZoneLabel->setIter_max(iter_max);
+
+        if (performanceBenchmark) {
+            benchmarkPerformance();
+        }
     }
+}
+
+void MainWindow::benchmarkPerformance() {
+    if (mandelbrotSetDefinition.zoom >= 33) {
+        QApplication::exit();
+    }
+
+    performanceBenchmark = true;
+    mandelbrotSetDefinition.x0 = -0.91659909584151357729532236251479559996369061991572;
+    mandelbrotSetDefinition.y0 = 0.31500558725038855641619427172539502635117969475687;
+    mandelbrotSetDefinition.iter_max = 5000;
+    updateMandelbrotZoneZoom(1);
+    computeMandelbrot();
 }

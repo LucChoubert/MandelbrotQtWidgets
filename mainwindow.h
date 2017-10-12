@@ -18,6 +18,7 @@ class MainWindow : public QMainWindow
 
 public:
     explicit MainWindow(QWidget *parent = 0);
+    void benchmarkPerformance();
     ~MainWindow();
 
 protected:
@@ -44,6 +45,7 @@ private slots:
     void actionInput_fields_Popup();
 
 private:
+    bool performanceBenchmark;
     MandelbrotSetDefinition mandelbrotSetDefinition;
     bool threadRunning;
     int nbThreadRunning;
