@@ -386,12 +386,8 @@ void MainWindow::renderMandelbrot(MandelbrotZoneCalculatorThread * iThread)
                     else {
                         long double xn = myZone[i][j].xn;
                         long double yn = myZone[i][j].yn;
-                        long double zn = sqrt( xn * xn + yn * yn );
-                        float hue = myZone[i][j].n - log((log(zn)))/log(2);
-                        //hue = 0.95 + 80.0 * hue;
-                        hue=(int)hue%360;
-                        QColor color;
-                        color.setHsv(hue,200,200);
+                        int n = myZone[i][j].n;
+                        QColor color = computeColor(xn, yn, n);
                         myImage.setPixelColor(aThread->getOffset() + i, j, color);
                     }
                 }
@@ -432,6 +428,50 @@ void MainWindow::renderMandelbrot(MandelbrotZoneCalculatorThread * iThread)
             benchmarkPerformance();
         }
     }
+}
+
+QColor MainWindow::computeColor(long double ix, long double iy, int in) {
+
+    QString selectedMode = ui->coloringComboBox->currentText();
+
+    if (selectedMode == "Continuous") {
+        long double zn = sqrt( ix * ix + iy * iy );
+        float hue = in - log((log(zn)))/log(2);
+        hue=(int)hue%360;
+        QColor color;
+        color.setHsv(hue,255,255);
+        return color;
+    }
+
+    if (selectedMode == "Histogram") {
+        //x=-0.084535808497677794663390307694506020652625011280179
+        //y=-0.87630187138624447381381882271611516443954315036535
+        //zoom=5.41504
+        long double zn = sqrt( ix * ix + iy * iy );
+        float hue = in - log( (log(zn)/log(2) )) / log(2);
+        if (hue>359) {
+            hue=359;
+        }
+        hue=(int)hue%360;
+        QColor color;
+        color.setHsv(hue,255,255);
+        return color;
+    }
+
+    if (selectedMode == "Escape time") {
+        float hue = (float)in/mandelbrotSetDefinition.iter_max;
+        hue = hue*359;
+        hue = (int)floor(hue);
+        qDebug() << in << mandelbrotSetDefinition.iter_max << hue;
+        QColor color;
+        color.setHsv(hue,255,255);
+        return color;
+    }
+
+    QColor color;
+    color.setHsv(0,0,0);
+    return color;
+
 }
 
 void MainWindow::benchmarkPerformance() {

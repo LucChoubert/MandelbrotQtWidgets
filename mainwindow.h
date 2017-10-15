@@ -28,6 +28,7 @@ protected:
     void computeMandelbrot();
     QString getStatusMessagePrefix();
     QString getStringFromLongDouble(const long double iLongDouble);
+    QColor computeColor(long double ix, long double iy, int in);
 
 private slots:
     void on_quitButton_clicked();
