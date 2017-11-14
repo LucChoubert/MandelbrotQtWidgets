@@ -7,7 +7,10 @@
 #include <QStatusBar>
 #include <QPlainTextEdit>
 #include <sstream>
+#include <iostream>
+#include <iomanip>
 #include <unistd.h>
+#include <algorithm>
 
 MainWindow::MainWindow(QWidget *parent) :
     QMainWindow(parent),
@@ -23,15 +26,21 @@ MainWindow::MainWindow(QWidget *parent) :
     ui->statusBar->addPermanentWidget(&statusMessage);
     ui->InputFieldsWidget->setVisible(ui->actionDisplay_input_fields->isChecked());
     QObject::connect(ui->mandelbrotZoneLabel, &MandelbrotLabel::mouseMoveHappened, this, &MainWindow::updateMandelbrotZoneCursorPosition);
-    QObject::connect(ui->mandelbrotZoneLabel, &MandelbrotLabel::mouseClickHappened, this, &MainWindow::updateMandelbrotZoneCenter);
-    QObject::connect(ui->mandelbrotZoneLabel, &MandelbrotLabel::mouseWheelHappened, this, &MainWindow::updateMandelbrotZoneZoomAndCenter);
+//    QObject::connect(ui->mandelbrotZoneLabel, &MandelbrotLabel::mouseClickHappened, this, &MainWindow::updateMandelbrotZoneCenter);
+//    QObject::connect(ui->mandelbrotZoneLabel, &MandelbrotLabel::mouseWheelHappened, this, &MainWindow::updateMandelbrotZoneZoomAndCenter);
+    QObject::connect(ui->mandelbrotZoneLabel, &MandelbrotLabel::mouseClickHappened, this, &MainWindow::updateMandelbrotZoneZoomAndCenter);
+    QObject::connect(ui->mandelbrotZoneLabel, &MandelbrotLabel::mouseWheelHappened, this, &MainWindow::updateMandelbrotZoneZoom);
     QObject::connect(ui->actionDisplay_input_fields, &QAction::triggered, this, &MainWindow::actionDisplay_input_fields);
     QObject::connect(ui->actionInput_fields_Popup, &QAction::triggered, this, &MainWindow::actionInput_fields_Popup);
 
-    mandelbrotSetDefinition.x0 = ui->x0LineEdit->text().toFloat();
-    mandelbrotSetDefinition.y0 = ui->y0LineEdit->text().toFloat();
+    mandelbrotSetDefinition.x0 = ui->x0LineEdit->text().toDouble();
+    mandelbrotSetDefinition.y0 = ui->y0LineEdit->text().toDouble();
     mandelbrotSetDefinition.iter_max = ui->iterationsLineEdit->text().toInt();
     mandelbrotSetDefinition.zoom = ui->zoomLineEdit->text().toFloat();
+
+    mandelbrotSetRenderingMethod.rendering_method_name = ui->coloringComboBox->currentText();
+    //TODO - specifc parameter for coloring
+    mandelbrotSetRenderingMethod.parameter1 = 0 ;
 }
 
 MainWindow::~MainWindow()
@@ -141,6 +150,17 @@ void MainWindow::paintEvent(QPaintEvent *event)
     //qDebug() << QThread::currentThread() << "- Paint Event Completed";
 }
 
+void MainWindow::on_coloringComboBox_currentIndexChanged(const QString &iText)
+{
+    //qDebug() << "Coloring method updated:" << iText;
+
+    mandelbrotSetRenderingMethod.rendering_method_name = ui->coloringComboBox->currentText();
+    //TODO - specifc parameter for coloring
+    mandelbrotSetRenderingMethod.parameter1 = 0 ;
+
+    ui->mandelbrotZoneLabel->repaint();
+}
+
 void MainWindow::on_quitButton_clicked()
 {
     //qDebug() << "Exit Button pushed";
@@ -151,28 +171,27 @@ void MainWindow::on_computeButton_clicked()
 {
     //qDebug() << "Compute Button pushed";
     bool ok1, ok2, ok3, ok4;
-    mandelbrotSetDefinition.x0 = ui->x0LineEdit->text().toFloat(&ok1);
-    mandelbrotSetDefinition.y0 = ui->y0LineEdit->text().toFloat(&ok2);
+    mandelbrotSetDefinition.x0 = ui->x0LineEdit->text().toDouble(&ok1);
+    mandelbrotSetDefinition.y0 = ui->y0LineEdit->text().toDouble(&ok2);
     mandelbrotSetDefinition.iter_max = ui->iterationsLineEdit->text().toInt(&ok3);
     mandelbrotSetDefinition.zoom = ui->zoomLineEdit->text().toFloat(&ok4);
 
     if (!ok1 || !ok2 || !ok3 || !ok4)
     {
         QMessageBox messageBox;
-        //messageBox.setIconPixmap(QPixmap(":/icon.png"));
         messageBox.setText("One of your entries is not a valid number.");
         messageBox.setWindowTitle("Error");
         messageBox.exec();
     }
 
+    updateMandelbrotSetDefinitionPanel();
     ui->mandelbrotZoneLabel->repaint();
-    //computeMandelbrot();
 }
 
 void MainWindow::updateMandelbrotZoneCursorPosition(PrecisionPoint position)
 {
     //qDebug() << "updateMandelbrotZoneCursorPosition:" << position;
-    QString stringX, stringY;
+    QString stringX, stringY, stringN;
     stringX.setNum((float)position.x, 'g', 100);
     stringY.setNum((float)position.y, 'g', 100);
     ui->statusBar->showMessage(QString("Cursor:(") + stringX + QString(",") + stringY + QString(")"),10000);
@@ -251,19 +270,24 @@ QString MainWindow::getStatusMessagePrefix() {
 
 void MainWindow::computeMandelbrot()
 {
+    QSize mySize = ui->mandelbrotZoneLabel->size();
+
     long double x0 = mandelbrotSetDefinition.x0;
     long double y0 = mandelbrotSetDefinition.y0;
     float zoom = mandelbrotSetDefinition.zoom;
     int iter_max = mandelbrotSetDefinition.iter_max;
 
     long double half_range = pow(2.0,(-zoom-1));
-    long double x_min = x0 - half_range;
-    long double x_max = x0 + half_range;
-    long double y_min = y0 - half_range;
-    long double y_max = y0 + half_range;
-    QSize mySize = ui->mandelbrotZoneLabel->size();
+    long double x_half_range = half_range * (mySize.width()) / std::min(mySize.width(), mySize.height());
+    long double y_half_range = half_range * (mySize.height()) / std::min(mySize.width(), mySize.height());
+    long double x_min = x0 - x_half_range;
+    long double x_max = x0 + x_half_range;
+    long double y_min = y0 - y_half_range;
+    long double y_max = y0 + y_half_range;
 
-    if (ui->mandelbrotZoneLabel->isSameZone(x_min,x_max,y_min,y_max,mySize.width(),mySize.height(),iter_max)) {
+    if (ui->mandelbrotZoneLabel->isSameZone(x_min,x_max,y_min,y_max,mySize.width(),mySize.height(),iter_max) &&
+        ui->mandelbrotZoneLabel->isSameRendering_method(mandelbrotSetRenderingMethod)    )
+    {
         //qDebug() << "SKIPPED CALCULATION - Same Area";
         return;
     }
@@ -276,23 +300,26 @@ void MainWindow::computeMandelbrot()
         threadRunning = true;
     }
 
+    updateMandelbrotSetDefinitionPanel();
+
     //mandelbrotZoneLabel doest not have the right pixmap size so let's recreate one with the appropriate size
     if (!ui->mandelbrotZoneLabel->isSameSize(mySize.width(),mySize.height())) {
         QImage myImage(mySize, QImage::Format_RGB32);
         ui->mandelbrotZoneLabel->setPixmap(QPixmap::fromImage(myImage));
     }
 
-    qDebug() << "======== Mandelbrot Set Area: ========";
+    qDebug() << "============= Mandelbrot Set Area: =============";
     qDebug() << " Max Iteration: " << iter_max;
     qDebug() << "        Center: " << getStringFromLongDouble(x0) << " " << getStringFromLongDouble(y0);
     qDebug() << "   Zoom factor: " << (float)(zoom);
     qDebug() << "  Width (2^-p): " << (float)(2*half_range);
     qDebug() << " Height (2^-p): " << (float)(2*half_range);
+    qDebug() << "=============     Window Area:     =============";
+    qDebug() << "Mandelbrot Widget Size" << mySize;
+    qDebug() << "======== Mandelbrot ADJUSTED Set Area: ========";
     qDebug() << "             X: " << getStringFromLongDouble(x_min) << " " << getStringFromLongDouble(x_max);
     qDebug() << "             Y: " << getStringFromLongDouble(y_min) << " " << getStringFromLongDouble(y_max);
-    qDebug() << "========     Window Area:     ========";
-    qDebug() << "Mandelbrot Widget Size" << mySize;
-    qDebug() << "======================================";
+    qDebug() << "================================================";
 
     //Status bar management
     //statusText+=getStatusMessagePrefix();
@@ -373,10 +400,52 @@ void MainWindow::renderMandelbrot(MandelbrotZoneCalculatorThread * iThread)
         QRgb valueOFF = qRgb(189, 149, 39); // 0xffbd9527
         QRgb valueIN = qRgb(0, 0, 0); // 0xffbd9527
 
-        //
-        for (int i=0; i< _listMandelbrotZoneCalculatorThread.size(); i++) {
+        //Go through the full data set to get max iteration number
+        int real_iter_max = 0;
+        long long int avg_iter_max = 0;
+        long long int stddev_iter_max = 0;
+        long long int nb_iter_max = 0;
+        for (int k=0; k< _listMandelbrotZoneCalculatorThread.size(); k++) {
             //Draw zone of the Mandelbrot Set from newly computed area
-            MandelbrotZoneCalculatorThread *aThread = _listMandelbrotZoneCalculatorThread[i];
+            MandelbrotZoneCalculatorThread *aThread = _listMandelbrotZoneCalculatorThread[k];
+            std::vector<std::vector<MandelbrotSetPoint>> myZone = aThread->getComputedZone();
+            for(int i=0; i<aThread->getWidth(); i++) {
+                for(int j=0; j<aThread->getHeight(); j++) {
+                    //get the max only
+                    if (!myZone[i][j].isInM && real_iter_max < myZone[i][j].n) {
+                        real_iter_max = myZone[i][j].n;
+                    }
+                    //prepare for average calculation
+                    nb_iter_max++;
+                    avg_iter_max+=myZone[i][j].n;
+                }
+            }
+        }
+        avg_iter_max/=nb_iter_max;
+        nb_iter_max = 0;
+        for (int k=0; k< _listMandelbrotZoneCalculatorThread.size(); k++) {
+            //Draw zone of the Mandelbrot Set from newly computed area
+            MandelbrotZoneCalculatorThread *aThread = _listMandelbrotZoneCalculatorThread[k];
+            std::vector<std::vector<MandelbrotSetPoint>> myZone = aThread->getComputedZone();
+            for(int i=0; i<aThread->getWidth(); i++) {
+                for(int j=0; j<aThread->getHeight(); j++) {
+                    //get the max only
+                    if (!myZone[i][j].isInM && real_iter_max < myZone[i][j].n) {
+                        real_iter_max = myZone[i][j].n;
+                    }
+                    //prepare for stddev calculation
+                    nb_iter_max++;
+                    stddev_iter_max+=pow((myZone[i][j].n - avg_iter_max),2);
+                }
+            }
+        }
+        stddev_iter_max=sqrt(stddev_iter_max/nb_iter_max);
+        qDebug() << "real, average, stddev iter_max:" << real_iter_max << avg_iter_max << stddev_iter_max;
+
+        // Render each pixel
+        for (int k=0; k< _listMandelbrotZoneCalculatorThread.size(); k++) {
+            //Draw zone of the Mandelbrot Set from newly computed area
+            MandelbrotZoneCalculatorThread *aThread = _listMandelbrotZoneCalculatorThread[k];
             std::vector<std::vector<MandelbrotSetPoint>> myZone = aThread->getComputedZone();
             for(int i=0; i<aThread->getWidth(); i++) {
                 for(int j=0; j<aThread->getHeight(); j++) {
@@ -387,7 +456,9 @@ void MainWindow::renderMandelbrot(MandelbrotZoneCalculatorThread * iThread)
                         long double xn = myZone[i][j].xn;
                         long double yn = myZone[i][j].yn;
                         int n = myZone[i][j].n;
-                        QColor color = computeColor(xn, yn, n);
+                        //QColor color = computeColor(xn, yn, n, mandelbrotSetDefinition.iter_max);
+                        QColor color = computeColor(xn, yn, n, real_iter_max);
+                        //QColor color = computeColor(xn, yn, std::min((long long int)real_iter_max, n/avg_iter_max*real_iter_max/2), real_iter_max);
                         myImage.setPixelColor(aThread->getOffset() + i, j, color);
                     }
                 }
@@ -408,7 +479,7 @@ void MainWindow::renderMandelbrot(MandelbrotZoneCalculatorThread * iThread)
         //Store that all threads have now completed
         threadRunning = false;
 
-        //Aggregate the 4 zones areas to store that and to use that to compare with new repaint event
+        //Aggregate the n zones areas to store that and to use that to compare with new repaint event
         long double x_min = 1000000, x_max = -1000000, y_min = 1000000, y_max = -1000000;
         int width = 0, height = 0, iter_max = 0;
         for (int i=0; i< _listMandelbrotZoneCalculatorThread.size(); i++) {
@@ -423,6 +494,7 @@ void MainWindow::renderMandelbrot(MandelbrotZoneCalculatorThread * iThread)
         //qDebug() << "User perception - TOTAL zone computed:" << (float)x_min << (float)x_max << (float)y_min << (float)y_max << width << height << iter_max;
         ui->mandelbrotZoneLabel->setZone(x_min,x_max,y_min,y_max,width,height);
         ui->mandelbrotZoneLabel->setIter_max(iter_max);
+        ui->mandelbrotZoneLabel->setRendering_method(mandelbrotSetRenderingMethod);
 
         if (performanceBenchmark) {
             benchmarkPerformance();
@@ -430,7 +502,7 @@ void MainWindow::renderMandelbrot(MandelbrotZoneCalculatorThread * iThread)
     }
 }
 
-QColor MainWindow::computeColor(long double ix, long double iy, int in) {
+QColor MainWindow::computeColor(long double ix, long double iy, int in, int in_max) {
 
     QString selectedMode = ui->coloringComboBox->currentText();
 
@@ -459,10 +531,9 @@ QColor MainWindow::computeColor(long double ix, long double iy, int in) {
     }
 
     if (selectedMode == "Escape time") {
-        float hue = (float)in/mandelbrotSetDefinition.iter_max;
-        hue = hue*359;
-        hue = (int)floor(hue);
-        qDebug() << in << mandelbrotSetDefinition.iter_max << hue;
+        float hue = (float)in/in_max;
+        hue = (int)floor(hue*359);
+        //qDebug() << in << mandelbrotSetDefinition.iter_max << hue;
         QColor color;
         color.setHsv(hue,255,255);
         return color;

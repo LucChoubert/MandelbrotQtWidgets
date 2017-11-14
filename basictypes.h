@@ -1,6 +1,8 @@
 #ifndef BASICTYPES_H
 #define BASICTYPES_H
 
+#include <QString>
+
 struct MandelbrotSetDefinition {
     // Coordinate of the center point
     long double x0;
@@ -33,5 +35,11 @@ struct MandelbrotSetPoint {
 };
 typedef struct MandelbrotSetPoint MandelbrotSetPoint;
 
+struct MandelbrotSetRenderingMethod {
+    // name of the method
+    QString rendering_method_name;
+    int parameter1;
+};
+typedef struct MandelbrotSetRenderingMethod MandelbrotSetRenderingMethod;
 
 #endif // BASICTYPES_H
