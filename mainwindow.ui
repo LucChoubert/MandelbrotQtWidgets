@@ -9,8 +9,8 @@
    <rect>
     <x>0</x>
     <y>0</y>
-    <width>422</width>
-    <height>280</height>
+    <width>1011</width>
+    <height>829</height>
    </rect>
   </property>
   <property name="sizePolicy">
@@ -277,12 +277,22 @@
               </item>
               <item>
                <property name="text">
-                <string>Histogram</string>
+                <string>Continuous 2</string>
+               </property>
+              </item>
+              <item>
+               <property name="text">
+                <string>Continuous 3</string>
                </property>
               </item>
               <item>
                <property name="text">
                 <string>Escape time</string>
+               </property>
+              </item>
+              <item>
+               <property name="text">
+                <string>Histogram</string>
                </property>
               </item>
              </widget>
@@ -372,7 +382,7 @@
     <rect>
      <x>0</x>
      <y>0</y>
-     <width>422</width>
+     <width>1011</width>
      <height>22</height>
     </rect>
    </property>

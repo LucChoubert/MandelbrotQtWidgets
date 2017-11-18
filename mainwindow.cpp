@@ -11,6 +11,7 @@
 #include <iomanip>
 #include <unistd.h>
 #include <algorithm>
+#include <cmath>
 
 MainWindow::MainWindow(QWidget *parent) :
     QMainWindow(parent),
@@ -507,23 +508,34 @@ QColor MainWindow::computeColor(long double ix, long double iy, int in, int in_m
     QString selectedMode = ui->coloringComboBox->currentText();
 
     if (selectedMode == "Continuous") {
-        long double zn = sqrt( ix * ix + iy * iy );
-        float hue = in - log((log(zn)))/log(2);
+        long double log_zn = log( ix * ix + iy * iy ) / 2;
+        //long double zn = sqrt( ix * ix + iy * iy );
+        float hue = in + 1 - log( log_zn/log(2) ) / log(2);
         hue=(int)hue%360;
         QColor color;
         color.setHsv(hue,255,255);
         return color;
     }
 
-    if (selectedMode == "Histogram") {
-        //x=-0.084535808497677794663390307694506020652625011280179
-        //y=-0.87630187138624447381381882271611516443954315036535
-        //zoom=5.41504
-        long double zn = sqrt( ix * ix + iy * iy );
-        float hue = in - log( (log(zn)/log(2) )) / log(2);
-        if (hue>359) {
-            hue=359;
-        }
+
+    if (selectedMode == "Continuous 2") {
+        long double log_zn = log( ix * ix + iy * iy ) / 2;
+        long double nu = in + 1 - log( log_zn / log(2) );
+        double fractpart, intpart;
+        fractpart = modf((double)(nu*3), &intpart);
+
+        float hue1 = ((int)(intpart))%360;
+        float hue2 = ((int)(intpart+1))%360;
+        float hue = hue1 + (hue2 - hue1)*fractpart;
+        QColor color;
+        color.setHsv(hue,255,255);
+        return color;
+    }
+
+    if (selectedMode == "Continuous 3") {
+        long double log_zn = log( ix * ix + iy * iy ) / 2;
+        long double hue = in + 1 - log( (log_zn/log(2) )) / log(2);
+        hue = 0.95 + 20.0 * hue;
         hue=(int)hue%360;
         QColor color;
         color.setHsv(hue,255,255);
@@ -531,6 +543,15 @@ QColor MainWindow::computeColor(long double ix, long double iy, int in, int in_m
     }
 
     if (selectedMode == "Escape time") {
+        float hue = (float)in/in_max;
+        hue = (int)floor(hue*359);
+        //qDebug() << in << mandelbrotSetDefinition.iter_max << hue;
+        QColor color;
+        color.setHsv(hue,255,255);
+        return color;
+    }
+
+    if (selectedMode == "Histogram") {
         float hue = (float)in/in_max;
         hue = (int)floor(hue*359);
         //qDebug() << in << mandelbrotSetDefinition.iter_max << hue;

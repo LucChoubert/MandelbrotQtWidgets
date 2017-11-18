@@ -68,5 +68,5 @@ void MandelbrotLabel::wheelEvent(QWheelEvent *event)
 {
     qDebug() << "MOUSE WHEEL EVENT:" << event->pos() << event->angleDelta();
     //emit mouseWheelHappened(convertScreenPositionToRealPosition(event->pos()), event->angleDelta().y()/120);
-    emit mouseWheelHappened(1);
+    emit mouseWheelHappened(event->angleDelta().y()/120);
 }
