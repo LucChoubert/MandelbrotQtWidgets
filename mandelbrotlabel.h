@@ -22,6 +22,7 @@ protected:
     void mousePressEvent(QMouseEvent *event) override;
     void wheelEvent(QWheelEvent *event) override;
     PrecisionPoint convertScreenPositionToRealPosition(QPoint iPosition);
+    QString convertLongDoubleToString(const long double iLongDouble);
 
 signals:
     void mouseMoveHappened(PrecisionPoint position);

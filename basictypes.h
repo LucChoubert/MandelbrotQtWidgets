@@ -42,4 +42,5 @@ struct MandelbrotSetRenderingMethod {
 };
 typedef struct MandelbrotSetRenderingMethod MandelbrotSetRenderingMethod;
 
+
 #endif // BASICTYPES_H
