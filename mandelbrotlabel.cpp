@@ -39,16 +39,16 @@ bool MandelbrotLabel::isSameZone(long double ix_min, long double ix_max, long do
                    iwidth_pixel==width_pixel &&
                    iheight_pixel==height_pixel &&
                    iiter_max==iter_max);
-    if (!aValue) {
-        qDebug() << "DEBUG SameZone" << (ix_min==x_min) << (ix_max==x_max) << (iy_min==y_min) << (iy_max==y_max) << (iwidth_pixel==width_pixel) << (iheight_pixel==height_pixel) << (iiter_max==iter_max);
-        qDebug() << "DEBUG SameZone" << convertLongDoubleToString(ix_min)  << convertLongDoubleToString(x_min);
-        qDebug() << "DEBUG SameZone" << convertLongDoubleToString(ix_max) << convertLongDoubleToString(x_max);
-        qDebug() << "DEBUG SameZone" << convertLongDoubleToString(iy_min) << convertLongDoubleToString(y_min);
-        qDebug() << "DEBUG SameZone" << convertLongDoubleToString(iy_max) << convertLongDoubleToString(y_max);
-        qDebug() << "DEBUG SameZone" << convertLongDoubleToString(iwidth_pixel) << convertLongDoubleToString(width_pixel);
-        qDebug() << "DEBUG SameZone" << convertLongDoubleToString(iheight_pixel) << convertLongDoubleToString(height_pixel);
-        qDebug() << "DEBUG SameZone" << convertLongDoubleToString(iiter_max) << convertLongDoubleToString(iter_max);
-    }
+//    if (!aValue) {
+//        qDebug() << "DEBUG SameZone" << (ix_min==x_min) << (ix_max==x_max) << (iy_min==y_min) << (iy_max==y_max) << (iwidth_pixel==width_pixel) << (iheight_pixel==height_pixel) << (iiter_max==iter_max);
+//        qDebug() << "DEBUG SameZone" << convertLongDoubleToString(ix_min)  << convertLongDoubleToString(x_min);
+//        qDebug() << "DEBUG SameZone" << convertLongDoubleToString(ix_max) << convertLongDoubleToString(x_max);
+//        qDebug() << "DEBUG SameZone" << convertLongDoubleToString(iy_min) << convertLongDoubleToString(y_min);
+//        qDebug() << "DEBUG SameZone" << convertLongDoubleToString(iy_max) << convertLongDoubleToString(y_max);
+//        qDebug() << "DEBUG SameZone" << convertLongDoubleToString(iwidth_pixel) << convertLongDoubleToString(width_pixel);
+//        qDebug() << "DEBUG SameZone" << convertLongDoubleToString(iheight_pixel) << convertLongDoubleToString(height_pixel);
+//        qDebug() << "DEBUG SameZone" << convertLongDoubleToString(iiter_max) << convertLongDoubleToString(iter_max);
+//    }
         return aValue;
 }
 
@@ -60,9 +60,9 @@ bool MandelbrotLabel::isSameSize(int iwidth_pixel, int iheight_pixel)
 bool MandelbrotLabel::isSameRendering_method(MandelbrotSetRenderingMethod irendering_method)
 {
     bool aValue = (rendering_method.rendering_method_name==irendering_method.rendering_method_name && rendering_method.parameter1==irendering_method.parameter1);
-    if (!aValue) {
-        qDebug() << "DEBUG SameRendering" << (rendering_method.rendering_method_name==irendering_method.rendering_method_name) << (rendering_method.parameter1==irendering_method.parameter1);
-    }
+//    if (!aValue) {
+//        qDebug() << "DEBUG SameRendering" << (rendering_method.rendering_method_name==irendering_method.rendering_method_name) << (rendering_method.parameter1==irendering_method.parameter1);
+//    }
     return aValue;
 }
 

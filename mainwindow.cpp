@@ -159,7 +159,8 @@ void MainWindow::on_coloringComboBox_currentIndexChanged(const QString &iText)
     //TODO - specifc parameter for coloring
     mandelbrotSetRenderingMethod.parameter1 = 0 ;
 
-    ui->mandelbrotZoneLabel->repaint();
+    //ui->mandelbrotZoneLabel->repaint();
+    renderMandelbrot();
 }
 
 void MainWindow::on_quitButton_clicked()
@@ -340,15 +341,17 @@ void MainWindow::computeMandelbrot()
     int nBThreads = QThread::idealThreadCount();
 
     if (_listMandelbrotZoneCalculatorThread.empty()) {
+        qDebug() << "Creating" << nBThreads << "threads";
         for (int i=0; i<nBThreads; i++) {
             MandelbrotZoneCalculatorThread * myThread = new MandelbrotZoneCalculatorThread();
             _listMandelbrotZoneCalculatorThread.push_back(myThread);
-            QObject::connect(myThread, &MandelbrotZoneCalculatorThread::zoneComputationCompleted, this, &MainWindow::renderMandelbrot);
+            QObject::connect(myThread, &MandelbrotZoneCalculatorThread::zoneComputationCompleted, this, &MainWindow::receiveZoneComputationCompleted);
         }
     }
 
     // split the zone in smaller zones based on the number of available threads, set configuration of the threads, and start them
     nBThreads = _listMandelbrotZoneCalculatorThread.size();
+    qDebug() << "Running on" << nBThreads << "threads";
     nbThreadRunning = nBThreads;
     int pixel_range = ceil((float)mySize.width() / nBThreads);
     int zone_offset = 0;
@@ -360,12 +363,10 @@ void MainWindow::computeMandelbrot()
         _listMandelbrotZoneCalculatorThread[i]->setCalculationDetails(zone_x_min,zone_x_max,y_min,y_max,zone_width,zone_height,iter_max,zone_offset);
         _listMandelbrotZoneCalculatorThread[i]->start();
         zone_offset += zone_width;
-
     }
-
 }
 
-void MainWindow::renderMandelbrot(MandelbrotZoneCalculatorThread * iThread)
+void MainWindow::receiveZoneComputationCompleted(MandelbrotZoneCalculatorThread * iThread)
 {
     //Count reference of active threads
     nbThreadRunning--;
@@ -373,133 +374,141 @@ void MainWindow::renderMandelbrot(MandelbrotZoneCalculatorThread * iThread)
     //qDebug() << "Signal received - Calculation Thread Completed for widget zone size " << iThread->getOffset() << iThread->getWidth() << iThread->getHeight()  ;
 
     if (nbThreadRunning==0) {
-        //qDebug() << "User perception - TOTAL Calculation completed in (sec):" << float(timer.elapsed())/1000;
+        renderMandelbrot();
+    }
+}
 
-        //Compute and prepare display in status bar of total time of calculation
-        QString loggingText, stringTimer;
-        stringTimer.setNum(float(timer.elapsed())/1000);
-        loggingText = QString(" - Calculated:") + stringTimer + QString("s");
+void MainWindow::renderMandelbrot()
+{
 
-        //We now have all the thread completed, we can start rendering
-        //Start measuring rendering time
-        QElapsedTimer renderingTimer;
-        renderingTimer.start();
+    //qDebug() << "User perception - TOTAL Calculation completed in (sec):" << float(timer.elapsed())/1000;
+
+    //Compute and prepare display in status bar of total time of calculation
+    QString loggingText, stringTimer;
+    stringTimer.setNum(float(timer.elapsed())/1000);
+    loggingText = QString(" - Calculated:") + stringTimer + QString("s");
+
+    //We now have all the thread completed, we can start rendering
+    //Start measuring rendering time
+    QElapsedTimer renderingTimer;
+    renderingTimer.start();
 
 
-        // Make sure pixmap is ready. May no more be usefull due to preliminary preparation done in paint event
-        const QPixmap * myPixmap = ui->mandelbrotZoneLabel->pixmap();
-        if ( !myPixmap )
-        {
-            qDebug() << "ERROR - NO IMAGE";
-            QSize mySize = ui->mandelbrotZoneLabel->size();
-            qDebug() << "        - Create Image of size:" << mySize;
-            QImage myImage(mySize, QImage::Format_RGB32);
-            ui->mandelbrotZoneLabel->setPixmap(QPixmap::fromImage(myImage));
-        }
-        myPixmap = ui->mandelbrotZoneLabel->pixmap();
-        QImage myImage( myPixmap->toImage() );
-        QRgb valueOFF = qRgb(189, 149, 39); // 0xffbd9527
-        QRgb valueIN = qRgb(0, 0, 0); // 0xffbd9527
-
-        //Go through the full data set to get max iteration number
-        int real_iter_max = 0;
-        long long int avg_iter_max = 0;
-        long long int stddev_iter_max = 0;
-        long long int nb_iter_max = 0;
-        for (int k=0; k< _listMandelbrotZoneCalculatorThread.size(); k++) {
-            //Draw zone of the Mandelbrot Set from newly computed area
-            MandelbrotZoneCalculatorThread *aThread = _listMandelbrotZoneCalculatorThread[k];
-            std::vector<std::vector<MandelbrotSetPoint>> myZone = aThread->getComputedZone();
-            for(int i=0; i<aThread->getWidth(); i++) {
-                for(int j=0; j<aThread->getHeight(); j++) {
-                    //get the max only
-                    if (!myZone[i][j].isInM && real_iter_max < myZone[i][j].n) {
-                        real_iter_max = myZone[i][j].n;
-                    }
-                    //prepare for average calculation
-                    nb_iter_max++;
-                    avg_iter_max+=myZone[i][j].n;
-                }
-            }
-        }
-        avg_iter_max/=nb_iter_max;
-        nb_iter_max = 0;
-        for (int k=0; k< _listMandelbrotZoneCalculatorThread.size(); k++) {
-            //Draw zone of the Mandelbrot Set from newly computed area
-            MandelbrotZoneCalculatorThread *aThread = _listMandelbrotZoneCalculatorThread[k];
-            std::vector<std::vector<MandelbrotSetPoint>> myZone = aThread->getComputedZone();
-            for(int i=0; i<aThread->getWidth(); i++) {
-                for(int j=0; j<aThread->getHeight(); j++) {
-                    //get the max only
-                    if (!myZone[i][j].isInM && real_iter_max < myZone[i][j].n) {
-                        real_iter_max = myZone[i][j].n;
-                    }
-                    //prepare for stddev calculation
-                    nb_iter_max++;
-                    stddev_iter_max+=pow((myZone[i][j].n - avg_iter_max),2);
-                }
-            }
-        }
-        stddev_iter_max=sqrt(stddev_iter_max/nb_iter_max);
-        qDebug() << "real, average, stddev iter_max:" << real_iter_max << avg_iter_max << stddev_iter_max;
-
-        // Render each pixel
-        for (int k=0; k< _listMandelbrotZoneCalculatorThread.size(); k++) {
-            //Draw zone of the Mandelbrot Set from newly computed area
-            MandelbrotZoneCalculatorThread *aThread = _listMandelbrotZoneCalculatorThread[k];
-            std::vector<std::vector<MandelbrotSetPoint>> myZone = aThread->getComputedZone();
-            for(int i=0; i<aThread->getWidth(); i++) {
-                for(int j=0; j<aThread->getHeight(); j++) {
-                    if (myZone[i][j].isInM) {
-                        myImage.setPixel(aThread->getOffset() + i, j, valueIN);
-                    }
-                    else {
-                        long double xn = myZone[i][j].xn;
-                        long double yn = myZone[i][j].yn;
-                        int n = myZone[i][j].n;
-                        //QColor color = computeColor(xn, yn, n, mandelbrotSetDefinition.iter_max);
-                        QColor color = computeColor(xn, yn, n, real_iter_max);
-                        //QColor color = computeColor(xn, yn, std::min((long long int)real_iter_max, n/avg_iter_max*real_iter_max/2), real_iter_max);
-                        myImage.setPixelColor(aThread->getOffset() + i, j, color);
-                    }
-                }
-            }
-        }
-
-        //Display now the image completely built
+    // Make sure pixmap is ready. May no more be usefull due to preliminary preparation done in paint event
+    const QPixmap * myPixmap = ui->mandelbrotZoneLabel->pixmap();
+    if ( !myPixmap )
+    {
+        qDebug() << "ERROR - NO IMAGE";
+        QSize mySize = ui->mandelbrotZoneLabel->size();
+        qDebug() << "        - Create Image of size:" << mySize;
+        QImage myImage(mySize, QImage::Format_RGB32);
         ui->mandelbrotZoneLabel->setPixmap(QPixmap::fromImage(myImage));
-        //qDebug() << "User perception - TOTAL Rendering completed in (sec):" << float(renderingTimer.elapsed())/1000;
+    }
+    myPixmap = ui->mandelbrotZoneLabel->pixmap();
+    QImage myImage( myPixmap->toImage() );
+    qDebug() << "Creating Image of size:" << myImage.size();
+    QRgb valueOFF = qRgb(189, 149, 39); // 0xffbd9527
+    QRgb valueIN = qRgb(0, 0, 0); // 0xffbd9527
 
-        // Compute total rendering time and finalize preparation of text for status bar
-        stringTimer.setNum(float(renderingTimer.elapsed())/1000);
-        loggingText = loggingText + QString(" + Rendered:") + stringTimer + QString("s");
-
-        //Display all calculation time in Status bar
-        statusMessage.setText(getStatusMessagePrefix() + loggingText);
-
-        //Store that all threads have now completed
-        threadRunning = false;
-
-        //Aggregate the n zones areas to store that and to use that to compare with new repaint event
-        long double x_min = 1000000, x_max = -1000000, y_min = 1000000, y_max = -1000000;
-        int width = 0, height = 0, iter_max = 0;
-        for (int i=0; i< _listMandelbrotZoneCalculatorThread.size(); i++) {
-            if (_listMandelbrotZoneCalculatorThread[i]->getX_max() > x_max) {x_max = _listMandelbrotZoneCalculatorThread[i]->getX_max();}
-            if (_listMandelbrotZoneCalculatorThread[i]->getX_min() < x_min) {x_min = _listMandelbrotZoneCalculatorThread[i]->getX_min();}
-            if (_listMandelbrotZoneCalculatorThread[i]->getY_max() > y_max) {y_max = _listMandelbrotZoneCalculatorThread[i]->getY_max();}
-            if (_listMandelbrotZoneCalculatorThread[i]->getY_min() < y_min) {y_min = _listMandelbrotZoneCalculatorThread[i]->getY_min();}
-            if ((_listMandelbrotZoneCalculatorThread[i]->getOffset() + _listMandelbrotZoneCalculatorThread[i]->getWidth()) > width) {width = (_listMandelbrotZoneCalculatorThread[i]->getOffset() + _listMandelbrotZoneCalculatorThread[i]->getWidth());}
-            if (_listMandelbrotZoneCalculatorThread[i]->getHeight() > height) {height = _listMandelbrotZoneCalculatorThread[i]->getHeight();}
-            if (_listMandelbrotZoneCalculatorThread[i]->getIter_max() > iter_max) {iter_max = _listMandelbrotZoneCalculatorThread[i]->getIter_max();}
+    //Go through the full data set to get max iteration number
+    int real_iter_max = 0;
+    long long int avg_iter_max = 0;
+    long long int stddev_iter_max = 0;
+    long long int nb_iter_max = 0;
+    for (int k=0; k< _listMandelbrotZoneCalculatorThread.size(); k++) {
+        //Draw zone of the Mandelbrot Set from newly computed area
+        MandelbrotZoneCalculatorThread *aThread = _listMandelbrotZoneCalculatorThread[k];
+        std::vector<std::vector<MandelbrotSetPoint>> myZone = aThread->getComputedZone();
+        for(int i=0; i<aThread->getWidth(); i++) {
+            for(int j=0; j<aThread->getHeight(); j++) {
+                //get the max only
+                if (!myZone[i][j].isInM && real_iter_max < myZone[i][j].n) {
+                    real_iter_max = myZone[i][j].n;
+                }
+                //prepare for average calculation
+                nb_iter_max++;
+                avg_iter_max+=myZone[i][j].n;
+            }
         }
-        //qDebug() << "User perception - TOTAL zone computed:" << (float)x_min << (float)x_max << (float)y_min << (float)y_max << width << height << iter_max;
-        ui->mandelbrotZoneLabel->setZone(x_min,x_max,y_min,y_max,width,height);
-        ui->mandelbrotZoneLabel->setIter_max(iter_max);
-        ui->mandelbrotZoneLabel->setRendering_method(mandelbrotSetRenderingMethod);
-
-        if (performanceBenchmark) {
-            benchmarkPerformance();
+    }
+    avg_iter_max/=nb_iter_max;
+    nb_iter_max = 0;
+    for (int k=0; k< _listMandelbrotZoneCalculatorThread.size(); k++) {
+        //Draw zone of the Mandelbrot Set from newly computed area
+        MandelbrotZoneCalculatorThread *aThread = _listMandelbrotZoneCalculatorThread[k];
+        std::vector<std::vector<MandelbrotSetPoint>> myZone = aThread->getComputedZone();
+        for(int i=0; i<aThread->getWidth(); i++) {
+            for(int j=0; j<aThread->getHeight(); j++) {
+                //get the max only
+                if (!myZone[i][j].isInM && real_iter_max < myZone[i][j].n) {
+                    real_iter_max = myZone[i][j].n;
+                }
+                //prepare for stddev calculation
+                nb_iter_max++;
+                stddev_iter_max+=pow((myZone[i][j].n - avg_iter_max),2);
+            }
         }
+    }
+    stddev_iter_max=sqrt(stddev_iter_max/nb_iter_max);
+    qDebug() << "real, average, stddev iter_max:" << real_iter_max << avg_iter_max << stddev_iter_max;
+
+    // Render each pixel
+    for (int k=0; k< _listMandelbrotZoneCalculatorThread.size(); k++) {
+        //Draw zone of the Mandelbrot Set from newly computed area
+        MandelbrotZoneCalculatorThread *aThread = _listMandelbrotZoneCalculatorThread[k];
+        std::vector<std::vector<MandelbrotSetPoint>> myZone = aThread->getComputedZone();
+        for(int i=0; i<aThread->getWidth(); i++) {
+            for(int j=0; j<aThread->getHeight(); j++) {
+                if (myZone[i][j].isInM) {
+                    myImage.setPixel(aThread->getOffset() + i, j, valueIN);
+                }
+                else {
+                    long double xn = myZone[i][j].xn;
+                    long double yn = myZone[i][j].yn;
+                    int n = myZone[i][j].n;
+                    //QColor color = computeColor(xn, yn, n, mandelbrotSetDefinition.iter_max);
+                    QColor color = computeColor(xn, yn, n, real_iter_max);
+                    //QColor color = computeColor(xn, yn, std::min((long long int)real_iter_max, n/avg_iter_max*real_iter_max/2), real_iter_max);
+                    myImage.setPixelColor(aThread->getOffset() + i, j, color);
+                }
+            }
+        }
+    }
+
+    //Display now the image completely built
+    qDebug() << "Having created Image of size:" << myImage.size();
+    ui->mandelbrotZoneLabel->setPixmap(QPixmap::fromImage(myImage));
+    //qDebug() << "User perception - TOTAL Rendering completed in (sec):" << float(renderingTimer.elapsed())/1000;
+
+    // Compute total rendering time and finalize preparation of text for status bar
+    stringTimer.setNum(float(renderingTimer.elapsed())/1000);
+    loggingText = loggingText + QString(" + Rendered:") + stringTimer + QString("s");
+
+    //Display all calculation time in Status bar
+    statusMessage.setText(getStatusMessagePrefix() + loggingText);
+
+    //Store that all threads have now completed
+    threadRunning = false;
+
+    //Aggregate the n zones areas to store that and to use that to compare with new repaint event
+    long double x_min = 1000000, x_max = -1000000, y_min = 1000000, y_max = -1000000;
+    int width = 0, height = 0, iter_max = 0;
+    for (int i=0; i< _listMandelbrotZoneCalculatorThread.size(); i++) {
+        if (_listMandelbrotZoneCalculatorThread[i]->getX_max() > x_max) {x_max = _listMandelbrotZoneCalculatorThread[i]->getX_max();}
+        if (_listMandelbrotZoneCalculatorThread[i]->getX_min() < x_min) {x_min = _listMandelbrotZoneCalculatorThread[i]->getX_min();}
+        if (_listMandelbrotZoneCalculatorThread[i]->getY_max() > y_max) {y_max = _listMandelbrotZoneCalculatorThread[i]->getY_max();}
+        if (_listMandelbrotZoneCalculatorThread[i]->getY_min() < y_min) {y_min = _listMandelbrotZoneCalculatorThread[i]->getY_min();}
+        if ((_listMandelbrotZoneCalculatorThread[i]->getOffset() + _listMandelbrotZoneCalculatorThread[i]->getWidth()) > width) {width = (_listMandelbrotZoneCalculatorThread[i]->getOffset() + _listMandelbrotZoneCalculatorThread[i]->getWidth());}
+        if (_listMandelbrotZoneCalculatorThread[i]->getHeight() > height) {height = _listMandelbrotZoneCalculatorThread[i]->getHeight();}
+        if (_listMandelbrotZoneCalculatorThread[i]->getIter_max() > iter_max) {iter_max = _listMandelbrotZoneCalculatorThread[i]->getIter_max();}
+    }
+    //qDebug() << "User perception - TOTAL zone computed:" << (float)x_min << (float)x_max << (float)y_min << (float)y_max << width << height << iter_max;
+    ui->mandelbrotZoneLabel->setZone(x_min,x_max,y_min,y_max,width,height);
+    ui->mandelbrotZoneLabel->setIter_max(iter_max);
+    ui->mandelbrotZoneLabel->setRendering_method(mandelbrotSetRenderingMethod);
+
+    if (performanceBenchmark) {
+        benchmarkPerformance();
     }
 }
 

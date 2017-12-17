@@ -26,16 +26,18 @@ protected:
     void paintEvent(QPaintEvent *event) override;
     void keyPressEvent(QKeyEvent *event) override;
     void computeMandelbrot();
+    void renderMandelbrot();
     QString getStatusMessagePrefix();
     QString getStringFromLongDouble(const long double iLongDouble);
     QColor computeColor(long double ix, long double iy, int in, int in_max);
+
 
 private slots:
     void on_quitButton_clicked();
     void on_computeButton_clicked();
     void on_coloringComboBox_currentIndexChanged(const QString &iText);
     void updateMandelbrotSetDefinitionPanel();
-    void renderMandelbrot(MandelbrotZoneCalculatorThread * iThread);
+    void receiveZoneComputationCompleted(MandelbrotZoneCalculatorThread * iThread);
     void updateMandelbrotZoneCursorPosition(PrecisionPoint position);
     void updateMandelbrotZoneCenter(PrecisionPoint position);
     void updateMandelbrotZoneZoom(int zoomFactor);

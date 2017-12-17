@@ -80,7 +80,7 @@ long double MandelbrotZoneCalculatorThread::getY_max()
 
 void MandelbrotZoneCalculatorThread::run()
 {
-    //qDebug() << "Calculation Thread :" << (double)x_min << "," << (double)x_max << "," << (double)y_min << "," << (double)y_max << "," << width_pixel<< "," << height_pixel << "," << iter_max << "," << offset_pixel << " - Starting...";
+    qDebug() << "Calculation Thread :" << (double)x_min << "," << (double)x_max << "," << (double)y_min << "," << (double)y_max << "," << width_pixel<< "," << height_pixel << "," << offset_pixel << "," << iter_max << " - Starting...";
     QElapsedTimer timer;
     timer.start();
 
